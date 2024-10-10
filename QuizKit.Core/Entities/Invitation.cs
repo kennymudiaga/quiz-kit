@@ -10,4 +10,7 @@ public record Invitation : IdEntity
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? SenderId { get; set; }
+
+    public virtual Organization? Organization { get; set; }
+    public virtual UserProfile? Sender { get; set; }
 }

@@ -17,5 +17,15 @@ public class InvitationConfig : IEntityTypeConfiguration<Invitation>
         builder.Property(x => x.Status).HasMaxLength(50);
         builder.Property(x => x.SenderId).HasMaxLength(36);
         builder.Property(x => x.CreatedAt).IsRequired();
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Sender)
+            .WithMany()
+            .HasForeignKey(x => x.SenderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

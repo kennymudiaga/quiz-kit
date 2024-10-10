@@ -1,5 +1,9 @@
-﻿namespace QuizKit.Common.Requests.Quizes;
+﻿using MediatR;
+using QuizKit.Common.Models.Quizes;
+using QuizKit.Common.Results;
 
-public class CreateQuizCommand
+namespace QuizKit.Common.Requests.Quizes;
+
+public class CreateQuizCommand : IRequest<Result<QuizModel>>
 {
 }

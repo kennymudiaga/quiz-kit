@@ -1,21 +1,13 @@
-﻿using QuizKit.Core.Requests.Users;
+﻿using QuizKit.Common.Requests.Users;
 using QuizKit.Core.Utils;
 
 namespace QuizKit.Core.Entities;
 
 public record UserProfile : IdEntity
 {
-    /// <summary>
-    /// Protected constructor for Db tools (Mongo or EF)
-    /// </summary>
-    protected UserProfile()
-    {
-        Id = IdGenerator.GenerateId(12);
-        _roles = [];
-    }
 
     public UserProfile(SignUpCommand model)
-        : this()
+        : base()
     {
         FirstName = model.FirstName?.Trim().ToLower();
         LastName = model.LastName?.Trim().ToLower();
@@ -39,14 +31,15 @@ public record UserProfile : IdEntity
     public DateTime? PasswordTokenExpiry { get; protected set; }
     public string? CreatorId { get; set; }
     public DateTime? LastLogin { get; protected set; }
-
     public bool IsAccountLocked => LockoutExpiry.HasValue && LockoutExpiry.Value > DateTime.UtcNow;
 
     public string Name => $"{FirstName} {LastName}";
 
-    private readonly List<UserRole> _roles;
+    protected readonly List<UserRole> _roles = [];
+    protected readonly List<UserOrganization> _organizations = [];
 
     public IReadOnlyList<UserRole> Roles => _roles;
+    public IReadOnlyList<UserOrganization> Organizations => _organizations;
 
     public bool IsPasswordTokenExpired =>
         !string.IsNullOrEmpty(PasswordToken) &&
