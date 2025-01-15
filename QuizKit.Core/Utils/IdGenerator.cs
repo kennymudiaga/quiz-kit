@@ -44,6 +44,6 @@ public static class IdGenerator
             value /= numberBase;
         } while (value != 0);
 
-        return new string(result.ToArray());
+        return new string([.. result]);
     }
 }

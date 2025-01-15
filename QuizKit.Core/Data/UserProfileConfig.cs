@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using QuizKit.Core.Entities;
 
@@ -17,10 +17,14 @@ public class UserProfileConfig : IEntityTypeConfiguration<UserProfile>
 
         builder.HasIndex(x => x.Email).IsUnique();
 
-        builder.HasMany<UserRole>("_roles").WithOne().HasForeignKey(x => x.UserProfileId);
+        builder.HasMany<UserRole>(UserProfile.RolesNavigationName)
+            .WithOne()
+            .HasForeignKey(x => x.UserProfileId);
         builder.Ignore(x => x.Roles);
 
-        builder.HasMany<UserOrganization>("_organizations").WithOne().HasForeignKey(x => x.UserProfileId);
+        builder.HasMany<UserOrganization>(UserProfile.OrganizationsNavigationName)
+            .WithOne()
+            .HasForeignKey(x => x.UserProfileId);
         builder.Ignore(x => x.Organizations);
 
         builder.Ignore(x => x.IsAccountLocked);

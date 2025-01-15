@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using QuizKit.Core.Entities;
 
@@ -20,17 +20,17 @@ public class QuizConfig : IEntityTypeConfiguration<Quiz>
         builder.HasOne(x => x.Category)
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Organization)
             .WithMany()
             .HasForeignKey(x => x.OrganizationId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany<QuizQuestion>("_questions")
+        builder.HasMany<QuizQuestion>(Quiz.QuestionsNavigationName)
             .WithOne()
             .HasForeignKey(x => x.QuizId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Ignore(x => x.Questions);
     }
 }

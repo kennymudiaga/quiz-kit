@@ -1,10 +1,13 @@
-﻿using QuizKit.Common.Requests.Users;
+using QuizKit.Common.Requests.Users;
 using QuizKit.Core.Utils;
 
 namespace QuizKit.Core.Entities;
 
 public record UserProfile : IdEntity
 {
+
+    public const string RolesNavigationName = nameof(_roles);
+    public const string OrganizationsNavigationName = nameof(_organizations);
 
     public UserProfile(SignUpCommand model)
         : base()
@@ -90,4 +93,3 @@ public record UserProfile : IdEntity
         // TODO: Log access success to UserAudit table
     }
 }
-
