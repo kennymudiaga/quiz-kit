@@ -1,4 +1,4 @@
-﻿namespace QuizKit.Core.Entities;
+namespace QuizKit.Core.Entities;
 
 public record Invitation : IdEntity
 {
@@ -9,6 +9,7 @@ public record Invitation : IdEntity
     public string? Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? ExpiryDate { get; set; }
     public string? SenderId { get; set; }
 
     public virtual Organization? Organization { get; set; }

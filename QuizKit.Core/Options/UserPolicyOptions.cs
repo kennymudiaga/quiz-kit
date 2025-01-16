@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace QuizKit.Core.Options;
 
+[ConfigSectionName(ConfigSection)]
 public class UserPolicyOptions : OptionsBase
 {
     public const string ConfigSection = "UserPolicy";
@@ -39,6 +40,9 @@ public class UserPolicyOptions : OptionsBase
     /// Gets or sets the timeout for an invite token - in hours
     /// </summary>
     public virtual int InviteExpiryHours { get; init; } = 72;
+
+    public int MinPasswordLength { get; set; }
+    public int MaxPasswordLength { get; set; }
 
     public virtual string AuthenticationScheme { get; init; } = JwtBearerDefaults.AuthenticationScheme;
 }
