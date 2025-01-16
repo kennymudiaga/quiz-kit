@@ -43,16 +43,19 @@ public class SignUpCommandHandler(
         {
             // Check if there's a pending invitation
             var invitation = await _dbContext.Invitations
-                .FirstOrDefaultAsync(x => x.Email == request.Email && x.TokenHash == request.InviteCode && x.Status == "Pending", cancellationToken);
+                .FirstOrDefaultAsync(x => x.Email == request.Email && x.Status == "Pending", cancellationToken);
 
-            // If user was invited, add them to the organization
+            // If user was invited, verify the invite code and add them to the organization
             if (invitation != null)
             {
-                user.AddOrganization(invitation.OrganizationId!, invitation.Role!);
-                
-                // Mark invitation as used
-                invitation.Accept();
-                _dbContext.Update(invitation);
+                var verificationResult = _passwordHasher.VerifyHashedPassword(invitation.Email!, invitation.TokenHash!, request.InviteCode!);
+                if (verificationResult == PasswordVerificationResult.Success)
+                {
+                    user.AddOrganization(invitation.OrganizationId!, invitation.Role!);
+                    
+                    // Mark invitation as used
+                    invitation.Status = "Accepted";
+                }
             }
         }
         await _dbContext.SaveChangesAsync(cancellationToken);

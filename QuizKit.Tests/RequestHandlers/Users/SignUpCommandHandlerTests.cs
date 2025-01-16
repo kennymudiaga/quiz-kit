@@ -118,11 +118,14 @@ public class SignUpCommandHandlerTests
     {
         // Arrange
         var organizationId = Guid.NewGuid().ToString();
+        var inviteCode = "inviteCode123";
+        var hashedInviteCode = "hashedInviteCode123";
+
         var invitation = new Invitation
         {
             Id = Guid.NewGuid().ToString(),
             Email = "test@example.com",
-            TokenHash = "inviteCode123",
+            TokenHash = hashedInviteCode,
             OrganizationId = organizationId,
             Role = "Member",
             Status = "Pending"
@@ -136,12 +139,16 @@ public class SignUpCommandHandlerTests
             Password = "Password123!",
             FirstName = "Test",
             LastName = "User",
-            InviteCode = "inviteCode123"
+            InviteCode = inviteCode
         };
 
         _mockPasswordHasher
             .Setup(x => x.HashPassword(command.Email, command.Password))
             .Returns("hashedPassword");
+
+        _mockPasswordHasher
+            .Setup(x => x.VerifyHashedPassword(invitation.Email!, hashedInviteCode, inviteCode))
+            .Returns(PasswordVerificationResult.Success);
 
         var handler = new SignUpCommandHandler(
             _dbContext,
@@ -172,18 +179,37 @@ public class SignUpCommandHandlerTests
     public async Task Handle_WithInvalidInviteCode_CreatesUserWithoutOrganization()
     {
         // Arrange
+        var inviteCode = "invalidCode";
+        var hashedInviteCode = "hashedInviteCode123";
+
+        var invitation = new Invitation
+        {
+            Id = Guid.NewGuid().ToString(),
+            Email = "test@example.com",
+            TokenHash = hashedInviteCode,
+            OrganizationId = Guid.NewGuid().ToString(),
+            Role = "Member",
+            Status = "Pending"
+        };
+        _dbContext.Invitations.Add(invitation);
+        await _dbContext.SaveChangesAsync();
+
         var command = new SignUpCommand
         {
             Email = "test@example.com",
             Password = "Password123!",
             FirstName = "Test",
             LastName = "User",
-            InviteCode = "invalidCode"
+            InviteCode = inviteCode
         };
 
         _mockPasswordHasher
             .Setup(x => x.HashPassword(command.Email, command.Password))
             .Returns("hashedPassword");
+
+        _mockPasswordHasher
+            .Setup(x => x.VerifyHashedPassword(invitation.Email!, hashedInviteCode, inviteCode))
+            .Returns(PasswordVerificationResult.Failed);
 
         var handler = new SignUpCommandHandler(
             _dbContext,
