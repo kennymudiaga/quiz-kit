@@ -13,4 +13,10 @@ public record Invitation : IdEntity
 
     public virtual Organization? Organization { get; set; }
     public virtual UserProfile? Sender { get; set; }
+
+    public void Accept(DateTime? dateAccepted = null)
+    {
+        Status = "Accepted";
+        UpdatedAt = dateAccepted ?? DateTime.UtcNow;
+    }
 }
