@@ -1,9 +1,14 @@
-
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using JwtFactory;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using QuizKit.Api.Extensions;
 using QuizKit.Common.Constants;
+using QuizKit.Core.Data;
+using QuizKit.Core.Options;
+using QuizKit.Core.ServiceContracts;
+using QuizKit.Core.Services;
 
 namespace QuizKit.Api;
 
@@ -20,12 +25,26 @@ public class Program
             builder.Configuration.AddJsonFile($"appsettings.{overrideEnv}.json", optional: true);
         }
 
+        // Add Options
+        builder.Services.AddOptions();
+        builder.Services.ConfigureOptions(builder.Configuration,
+            typeof(UserPolicyOptions).Assembly);
+
+        // Add DbContext (EF)
+        builder.Services.AddDbContext<QuizDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("QuizDb")));
+
         // Add services to the container.
         builder.Services.AddAutoMapperProfiles();
         // Add validators - uses FluentValidation
         builder.Services.AddValidators();
+
         // Add mediator - this will also add the pipeline behaviors
         builder.Services.AddMediatR();
+        builder.Services.AddScoped<IPasswordHasher<string>, PasswordHasher<string>>();
+        builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
+
+        builder.Services.AddHttpContextAccessor();
+
 
         builder.Services.AddControllers();
         builder.Services.AddJwtProvider(builder.Configuration.GetSection("JWT").Get<JwtInfo>());
@@ -75,7 +94,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
 
         app.MapControllers();
 
