@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{801210B5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizKit.Tests", "QuizKit.Tests\QuizKit.Tests.csproj", "{27A22672-75C0-4BDD-A5EF-1CBA29CBED59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizKit.IntegrationTests", "QuizKit.IntegrationTests\QuizKit.IntegrationTests.csproj", "{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,12 +37,17 @@ Global
 		{27A22672-75C0-4BDD-A5EF-1CBA29CBED59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27A22672-75C0-4BDD-A5EF-1CBA29CBED59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27A22672-75C0-4BDD-A5EF-1CBA29CBED59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{27A22672-75C0-4BDD-A5EF-1CBA29CBED59} = {801210B5-8147-4924-830F-E5A29E71DCB6}
+		{EBAA947C-0CFD-4119-A65D-B7F6E745C4D3} = {801210B5-8147-4924-830F-E5A29E71DCB6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3C34D5DB-A881-4FBA-8D3D-3FE149C744A9}

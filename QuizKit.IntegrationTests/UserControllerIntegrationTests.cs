@@ -1,10 +1,12 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Models.Users;
+using Xunit;
+using QuizKit.Common.Results;
 
-namespace QuizKit.Tests.Integration;
+namespace QuizKit.IntegrationTests;
 
 public class UserControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
@@ -41,16 +43,16 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         // Assert
         var responseContent = await response.Content.ReadAsStringAsync();
-        
-        Assert.True(response.IsSuccessStatusCode, 
+
+        Assert.True(response.IsSuccessStatusCode,
             $"Expected success status code, but got {response.StatusCode}. " +
             $"Response content: {responseContent}");
-        
+
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = JsonSerializer.Deserialize<LoggedInUserModel>(responseContent, _jsonOptions);
         Assert.NotNull(content);
-        
+
         // Check data directly instead of relying on IsSuccess
         if (content == null)
         {
@@ -106,10 +108,10 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
         var signUpResponseContent = await signUpResponse.Content.ReadAsStringAsync();
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
-            signUpResponseContent, 
+            signUpResponseContent,
             _jsonOptions
         );
-        Assert.True(signUpResponse.IsSuccessStatusCode, 
+        Assert.True(signUpResponse.IsSuccessStatusCode,
             $"Signup failed. Full Response: {signUpResponseContent}, " +
             $"Status: {signUpResponse.StatusCode}");
 
@@ -124,16 +126,16 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         // Assert
         var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
-        
-        Assert.True(loginResponse.IsSuccessStatusCode, 
+
+        Assert.True(loginResponse.IsSuccessStatusCode,
             $"Expected success status code, but got {loginResponse.StatusCode}. " +
             $"Response content: {loginResponseContent}");
-        
+
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
         var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(loginResponseContent, _jsonOptions);
         Assert.NotNull(loginContent);
-        
+
         // Check data directly instead of relying on IsSuccess
         if (loginContent == null)
         {
@@ -161,10 +163,10 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
-            await signUpResponse.Content.ReadAsStringAsync(), 
+            await signUpResponse.Content.ReadAsStringAsync(),
             _jsonOptions
         );
-        Assert.True(signUpResponse.IsSuccessStatusCode, 
+        Assert.True(signUpResponse.IsSuccessStatusCode,
             $"Signup failed. Status: {signUpResponse.StatusCode}, " +
             $"Content: {await signUpResponse.Content.ReadAsStringAsync()}");
 
@@ -178,12 +180,12 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
         loginResponse.EnsureSuccessStatusCode();
         var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(
-            await loginResponse.Content.ReadAsStringAsync(), 
+            await loginResponse.Content.ReadAsStringAsync(),
             _jsonOptions
         );
 
         // Set the authorization token
-        _client.DefaultRequestHeaders.Authorization = 
+        _client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginContent!.Token);
 
         var changePasswordCommand = new ChangePasswordCommand
@@ -196,11 +198,11 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         // Assert
         var changePasswordResponseContent = await changePasswordResponse.Content.ReadAsStringAsync();
-        
-        Assert.True(changePasswordResponse.IsSuccessStatusCode, 
+
+        Assert.True(changePasswordResponse.IsSuccessStatusCode,
             $"Expected success status code, but got {changePasswordResponse.StatusCode}. " +
             $"Response content: {changePasswordResponseContent}");
-        
+
         Assert.Equal(HttpStatusCode.NoContent, changePasswordResponse.StatusCode);
 
         // Verify new password works

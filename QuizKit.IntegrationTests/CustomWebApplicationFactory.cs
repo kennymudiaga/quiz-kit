@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using QuizKit.Api;
 using QuizKit.Core.Data;
 
-namespace QuizKit.Tests.Integration;
+namespace QuizKit.IntegrationTests;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -37,14 +37,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             var sp = services.BuildServiceProvider();
 
             // Create a scope to obtain a reference to the database context
-            using (var scope = sp.CreateScope())
-            {
-                var scopedServices = scope.ServiceProvider;
-                var db = scopedServices.GetRequiredService<QuizDbContext>();
+            using var scope = sp.CreateScope();
+            var scopedServices = scope.ServiceProvider;
+            var db = scopedServices.GetRequiredService<QuizDbContext>();
 
-                // Ensure the database is created
-                db.Database.EnsureCreated();
-            }
+            // Ensure the database is created
+            db.Database.EnsureCreated();
         });
 
         // Optional: Override configuration to use test-specific settings
