@@ -3,6 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using JwtFactory;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using QuizKit.Api.Extensions;
 using QuizKit.Common.Constants;
 using QuizKit.Core.Data;
@@ -30,8 +31,20 @@ public class Program
         builder.Services.ConfigureOptions(builder.Configuration,
             typeof(UserPolicyOptions).Assembly);
 
-        // Add DbContext (EF)
-        builder.Services.AddDbContext<QuizDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("QuizDb")));
+        // Conditionally add DbContext based on environment
+        var environment = builder.Environment.EnvironmentName;
+        if (environment == "Testing")
+        {
+            // Use in-memory database for testing
+            builder.Services.AddDbContext<QuizDbContext>(options => 
+                options.UseInMemoryDatabase("QuizTestDb"));
+        }
+        else
+        {
+            // Use SQL Server for production and development
+            builder.Services.AddDbContext<QuizDbContext>(options => 
+                options.UseSqlServer(builder.Configuration.GetConnectionString("QuizDb")));
+        }
 
         // Add services to the container.
         builder.Services.AddAutoMapperProfiles();
@@ -44,7 +57,6 @@ public class Program
         builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
 
         builder.Services.AddHttpContextAccessor();
-
 
         builder.Services.AddControllers();
         builder.Services.AddJwtProvider(builder.Configuration.GetSection("JWT").Get<JwtInfo>());

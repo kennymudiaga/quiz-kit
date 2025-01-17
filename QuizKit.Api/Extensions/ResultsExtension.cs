@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using QuizKit.Common.Results;
 
 namespace QuizKit.Api.Extensions;

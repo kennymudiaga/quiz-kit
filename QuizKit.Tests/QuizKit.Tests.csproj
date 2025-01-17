@@ -11,11 +11,12 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="xunit" Version="2.6.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.5">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -29,6 +30,12 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Moq" />
+    <Using Include="System.Net.Http.Json" />
+    <Using Include="QuizKit.Common.Models.Users" />
+    <Using Include="QuizKit.Common.Results" />
+    <Using Include="QuizKit.Core.Entities.Organization" Alias="CoreOrganization" />
+    <Using Include="QuizKit.Common.Models.Users.Organization" Alias="CommonOrganization" />
   </ItemGroup>
 
 </Project>

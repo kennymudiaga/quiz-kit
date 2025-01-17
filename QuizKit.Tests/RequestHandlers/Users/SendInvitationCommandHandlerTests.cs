@@ -36,7 +36,7 @@ public class SendInvitationCommandHandlerTests
     {
         // Arrange
         var organizationId = Guid.NewGuid().ToString();
-        var organization = new Organization
+        var organization = new Core.Entities.Organization
         {
             Id = organizationId,
             Name = "Test Org"
@@ -106,7 +106,7 @@ public class SendInvitationCommandHandlerTests
     {
         // Arrange
         var organizationId = Guid.NewGuid().ToString();
-        var organization = new Organization
+        var organization = new QuizKit.Core.Entities.Organization
         {
             Id = organizationId,
             Name = "Test Org"
@@ -150,7 +150,7 @@ public class SendInvitationCommandHandlerTests
     {
         // Arrange
         var organizationId = Guid.NewGuid().ToString();
-        var organization = new Organization
+        var organization = new QuizKit.Core.Entities.Organization
         {
             Id = organizationId,
             Name = "Test Org"
