@@ -253,4 +253,49 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithValidEmail_Succeeds()
+    {
+        // Arrange
+        var email = "test@example.com";
+        var signUpCommand = new SignUpCommand
+        {
+            Email = $"reset-paasword-{Guid.NewGuid()}@example.com",
+            Password = "StrongPassword123!",
+            ConfirmPassword = "StrongPassword123!",
+            FirstName = "Change",
+            LastName = "Password",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        signUpResponse.EnsureSuccessStatusCode();
+
+        var requestPasswordResetCommand = new RequestPasswordResetCommand
+        {
+            Email = email
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/user/reset-password", requestPasswordResetCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithNonExistentEmail_Succeeds()
+    {
+        // Arrange
+        var requestPasswordResetCommand = new RequestPasswordResetCommand
+        {
+            Email = "nonexistent@example.com"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/user/reset-password", requestPasswordResetCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
 }

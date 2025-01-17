@@ -1,7 +1,7 @@
 using QuizKit.Common.Requests.Users;
 using QuizKit.Core.Validators.Users;
 
-namespace QuizKit.Tests.Validators;
+namespace QuizKit.Tests.Validators.Users;
 
 public class LoginCommandValidatorTests
 {

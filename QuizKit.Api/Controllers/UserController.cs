@@ -43,4 +43,14 @@ public class UserController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(command);
         return result.ToActionResult();
     }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
 }

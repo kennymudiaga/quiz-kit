@@ -1,11 +1,8 @@
 using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using QuizKit.Api.Controllers;
 using QuizKit.Common.Requests.Users;
-using QuizKit.Common.Results;
-using Xunit;
 
 namespace QuizKit.Tests.Controllers;
 
@@ -120,5 +117,65 @@ public class UserControllerTests
 
         // Assert
         Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithValidEmail_ReturnsNoContent()
+    {
+        // Arrange
+        var resetCommand = new RequestPasswordResetCommand
+        {
+            Email = "user@example.com"
+        };
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.RequestPasswordReset(resetCommand);
+
+        // Assert
+        var noContentResult = Assert.IsType<NoContentResult>(result);
+        Assert.Equal((int)HttpStatusCode.NoContent, noContentResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithLockedAccount_ReturnsForbid()
+    {
+        // Arrange
+        var resetCommand = new RequestPasswordResetCommand
+        {
+            Email = "locked@example.com"
+        };
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .ReturnsAsync(new Failure("Account is locked", ResultStatus.Forbidden));
+
+        // Act
+        var result = await _controller.RequestPasswordReset(resetCommand);
+
+        // Assert
+        Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithInvalidEmail_ReturnsBadRequest()
+    {
+        // Arrange
+        var resetCommand = new RequestPasswordResetCommand
+        {
+            Email = "invalid-email"
+        };
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .ReturnsAsync(new Failure("Invalid email format", ResultStatus.BadRequest));
+
+        // Act
+        var result = await _controller.RequestPasswordReset(resetCommand);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
+        Assert.Equal("Invalid email format", ((Result)badRequestResult.Value!).Message);
     }
 }

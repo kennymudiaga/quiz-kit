@@ -2,9 +2,8 @@ using FluentValidation.TestHelper;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Core.Options;
 using QuizKit.Core.Validators.Users;
-using Xunit;
 
-namespace QuizKit.Tests.Validators;
+namespace QuizKit.Tests.Validators.Users;
 
 public class ChangePasswordCommandValidatorTests
 {
@@ -42,8 +41,8 @@ public class ChangePasswordCommandValidatorTests
     [InlineData("", "newPassword456", "CurrentPassword")]
     [InlineData("oldPassword123", "", "NewPassword")]
     public void ShouldFailValidation_WhenRequiredFieldsAreMissing(
-        string currentPassword, 
-        string newPassword, 
+        string currentPassword,
+        string newPassword,
         string expectedPropertyName)
     {
         // Arrange
@@ -80,10 +79,10 @@ public class ChangePasswordCommandValidatorTests
 
     [Theory]
     [InlineData("short", "New password must be at least 8 characters")]
-    [InlineData("verylongpasswordthatexceedsthemaximumlengthofsixtyfourcharactersandshouldfail", 
+    [InlineData("verylongpasswordthatexceedsthemaximumlengthofsixtyfourcharactersandshouldfail",
         "New password must be at most 64 characters")]
     public void ShouldFailValidation_WhenPasswordLengthIsInvalid(
-        string newPassword, 
+        string newPassword,
         string expectedErrorMessage)
     {
         // Arrange
