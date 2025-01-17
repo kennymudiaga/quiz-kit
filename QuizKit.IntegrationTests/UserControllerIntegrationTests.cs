@@ -11,12 +11,10 @@ namespace QuizKit.IntegrationTests;
 public class UserControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly CustomWebApplicationFactory _factory;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public UserControllerIntegrationTests(CustomWebApplicationFactory factory)
     {
-        _factory = factory;
         _client = factory.CreateClient();
         _jsonOptions = new JsonSerializerOptions
         {

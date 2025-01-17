@@ -1,0 +1,52 @@
+<Solution>
+  <Configurations>
+    <Configuration Name="Debug" Platform="Any CPU" />
+    <Configuration Name="Release" Platform="Any CPU" />
+  </Configurations>
+  <Project Name="QuizKit.Common"
+    Path="QuizKit.Common\QuizKit.Common.csproj"
+    Type="Classic C#">
+    <Configurations>
+      <Configuration Name="Debug" Platform="Any CPU" />
+      <Configuration Name="Release" Platform="Any CPU" />
+    </Configurations>
+  </Project>
+
+  <Project Name="QuizKit.Api"
+    Path="QuizKit.Api\QuizKit.Api.csproj"
+    Type="Classic C#">
+    <Configurations>
+      <Configuration Name="Debug" Platform="Any CPU" />
+      <Configuration Name="Release" Platform="Any CPU" />
+    </Configurations>
+  </Project>
+
+  <Project Name="QuizKit.Core"
+    Path="QuizKit.Core\QuizKit.Core.csproj"
+    Type="Classic C#">
+    <Configurations>
+      <Configuration Name="Debug" Platform="Any CPU" />
+      <Configuration Name="Release" Platform="Any CPU" />
+    </Configurations>
+  </Project>
+
+  <Folder Name="/Tests/">
+    <Project Name="QuizKit.Tests"
+      Path="QuizKit.Tests\QuizKit.Tests.csproj"
+      Type="Classic C#">
+      <Configurations>
+        <Configuration Name="Debug" Platform="Any CPU" />
+        <Configuration Name="Release" Platform="Any CPU" />
+      </Configurations>
+    </Project>
+
+    <Project Name="QuizKit.IntegrationTests"
+      Path="QuizKit.IntegrationTests\QuizKit.IntegrationTests.csproj"
+      Type="Classic C#">
+      <Configurations>
+        <Configuration Name="Debug" Platform="Any CPU" />
+        <Configuration Name="Release" Platform="Any CPU" />
+      </Configurations>
+    </Project>
+  </Folder>
+</Solution>
