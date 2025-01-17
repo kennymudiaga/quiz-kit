@@ -72,6 +72,7 @@ public class ChangePasswordCommandHandler(
         _dbContext.Update(user);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        _logger.LogInformation("Password successfully changed for user '{email}'", email);
         return result ?? Result.Success();
     }
 }

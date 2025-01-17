@@ -68,7 +68,7 @@ public class UserControllerTests
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
-        Assert.Equal("Invalid signup details", ((Result)badRequestResult.Value).Message);
+        Assert.Equal("Invalid signup details", ((Result)badRequestResult.Value!).Message);
     }
 
     [Fact]
@@ -119,6 +119,6 @@ public class UserControllerTests
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
-        Assert.Equal("Invalid login credentials", ((Result)badRequestResult.Value).Message);
+        Assert.Equal("Invalid login credentials", ((Result)badRequestResult.Value!).Message);
     }
 }

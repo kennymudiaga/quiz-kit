@@ -14,7 +14,7 @@ public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCo
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("New password is required")
             .NotEqual(x => x.CurrentPassword).WithMessage("New password must be different from current password")
-            .MinimumLength(userPolicyOptions.MinPasswordLength).WithMessage($"Password must be at least {userPolicyOptions.MinPasswordLength} characters")
-            .MaximumLength(userPolicyOptions.MaxPasswordLength).WithMessage($"Password must be at most {userPolicyOptions.MaxPasswordLength} characters");
+            .MinimumLength(userPolicyOptions.MinPasswordLength).WithMessage($"New password must be at least {userPolicyOptions.MinPasswordLength} characters")
+            .MaximumLength(userPolicyOptions.MaxPasswordLength).WithMessage($"New password must be at most {userPolicyOptions.MaxPasswordLength} characters");
     }
 }
