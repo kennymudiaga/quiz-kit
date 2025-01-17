@@ -3,7 +3,6 @@ using Asp.Versioning.ApiExplorer;
 using JwtFactory;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using QuizKit.Api.Extensions;
 using QuizKit.Common.Constants;
 using QuizKit.Core.Data;
