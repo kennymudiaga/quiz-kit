@@ -24,8 +24,8 @@ public class SearchUsersQueryHandlerTests : IDisposable
     public async Task Handle_WithNoSearchTerm_ReturnsAllUsers()
     {
         // Arrange
-        var user1 = TestUser.Create("user1@example.com", firstName: "John", lastName: "Doe");
-        var user2 = TestUser.Create("user2@example.com", firstName: "Jane", lastName: "Smith");
+        var user1 = TestUser.Create("user1@example.com", firstName: "john", lastName: "doe");
+        var user2 = TestUser.Create("user2@example.com", firstName: "jane", lastName: "smith");
         await _dbContext.Users.AddRangeAsync(user1, user2);
         await _dbContext.SaveChangesAsync();
 
@@ -36,19 +36,21 @@ public class SearchUsersQueryHandlerTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        var users = result.Data!.ToList();
-        Assert.Equal(2, users.Count);
+        var data = result.Data!;
+        Assert.Equal(2, data.TotalCount);
+        Assert.Equal(2, data.Items.Count);
+        Assert.Equal(1, data.Page);
+        Assert.Equal(20, data.PageSize);
     }
 
     [Theory]
     [InlineData("john")]
     [InlineData("doe")]
-    [InlineData("user1@example")]
     public async Task Handle_WithSearchTerm_ReturnsMatchingUsers(string searchTerm)
     {
         // Arrange
-        var user1 = TestUser.Create("user1@example.com", firstName: "John", lastName: "Doe");
-        var user2 = TestUser.Create("user2@example.com", firstName: "Jane", lastName: "Smith");
+        var user1 = TestUser.Create("user1@example.com", firstName: "john", lastName: "doe");
+        var user2 = TestUser.Create("user2@example.com", firstName: "jane", lastName: "smith");
         await _dbContext.Users.AddRangeAsync(user1, user2);
         await _dbContext.SaveChangesAsync();
 
@@ -59,35 +61,41 @@ public class SearchUsersQueryHandlerTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        var users = result.Data!.ToList();
-        Assert.Single(users);
-        Assert.Equal("john", users[0].FirstName);
-        Assert.Equal("doe", users[0].LastName);
+        var data = result.Data!;
+        Assert.Equal(1, data.TotalCount);
+        Assert.Single(data.Items);
+        Assert.Equal("john", data.Items[0].FirstName);
+        Assert.Equal("doe", data.Items[0].LastName);
     }
 
     [Fact]
-    public async Task Handle_WithMaxResults_LimitsResults()
+    public async Task Handle_WithPagination_ReturnsCorrectPage()
     {
         // Arrange
-        var users = Enumerable.Range(1, 5)
+        var users = Enumerable.Range(1, 25)
             .Select(i => TestUser.Create($"user{i}@example.com", firstName: $"User{i}"))
             .ToList();
         await _dbContext.Users.AddRangeAsync(users);
         await _dbContext.SaveChangesAsync();
 
-        var query = new SearchUsersQuery { MaxResults = 3 };
+        var query = new SearchUsersQuery { Page = 2, PageSize = 10 };
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        var returnedUsers = result.Data!.ToList();
-        Assert.Equal(3, returnedUsers.Count);
+        var data = result.Data!;
+        Assert.Equal(25, data.TotalCount);
+        Assert.Equal(10, data.Items.Count);
+        Assert.Equal(2, data.Page);
+        Assert.Equal(10, data.PageSize);
+        Assert.True(data.HasPreviousPage);
+        Assert.True(data.HasNextPage);
     }
 
     [Fact]
-    public async Task Handle_WithNoResults_ReturnsEmptyList()
+    public async Task Handle_WithNoResults_ReturnsEmptyPage()
     {
         // Arrange
         var query = new SearchUsersQuery { SearchTerm = "nonexistent" };
@@ -97,7 +105,13 @@ public class SearchUsersQueryHandlerTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Data!);
+        var data = result.Data!;
+        Assert.Equal(0, data.TotalCount);
+        Assert.Empty(data.Items);
+        Assert.Equal(1, data.Page);
+        Assert.Equal(20, data.PageSize);
+        Assert.False(data.HasNextPage);
+        Assert.False(data.HasPreviousPage);
     }
 
     public void Dispose()

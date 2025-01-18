@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using QuizKit.Common.Requests.Users;
+using QuizKit.Common.Models;
 using QuizKit.Common.Models.Users;
-using Xunit;
+using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Results;
+using Xunit;
+using QuizKit.Common;
 
 namespace QuizKit.IntegrationTests;
 
@@ -456,28 +458,28 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     }
 
     [Fact]
-    public async Task SearchUsers_WithNoSearchTerm_ReturnsAllUsers()
+    public async Task SearchUsers_WithoutSearchTerm_ReturnsAllUsers()
     {
-        // Arrange: Create some users
+        // Arrange: Create users
         var users = new[]
         {
             new SignUpCommand
             {
-                Email = $"user1-{Guid.NewGuid()}@example.com",
+                Email = "test1@example.com",
                 Password = "StrongPassword123!",
                 ConfirmPassword = "StrongPassword123!",
-                FirstName = "John",
-                LastName = "Doe",
-                PhoneNumber = "+1234567890"
+                FirstName = "jane",
+                LastName = "smith",
+                PhoneNumber = "+987654321"
             },
             new SignUpCommand
             {
-                Email = $"user2-{Guid.NewGuid()}@example.com",
+                Email = "test2@example.com",
                 Password = "StrongPassword123!",
                 ConfirmPassword = "StrongPassword123!",
-                FirstName = "Jane",
-                LastName = "Smith",
-                PhoneNumber = "+987654321"
+                FirstName = "john",
+                LastName = "doe",
+                PhoneNumber = "+123456789"
             }
         };
 
@@ -492,25 +494,25 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync("/user/search");
+        var searchResponse = await _client.GetAsync("/user/search?page=1&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
         Assert.NotNull(result);
-        // There should be at least 2 users
-        Assert.True(result.Count >= 2, "Expected at least 2 results");
+        Assert.True(result.TotalCount >= 2, "Expected at least 2 results");
+        Assert.Equal(1, result.Page);
+        Assert.Equal(10, result.PageSize);
     }
 
     [Theory]
-    [InlineData("John")]
-    [InlineData("Doe")]
-    [InlineData("1234567890")]
+    [InlineData("john")]
+    [InlineData("doe")]
     public async Task SearchUsers_WithSearchTerm_ReturnsMatchingUsers(string searchTerm)
     {
         // Arrange: Create users
-        var email = $"searchtest-matches-users@example.com";
+        var email = "searchtest-matches-users@example.com";
 
         // check if email is available - only sign up if it is
         var emailAvailableResponse = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
@@ -521,49 +523,48 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
                 Email = email,
                 Password = "StrongPassword123!",
                 ConfirmPassword = "StrongPassword123!",
-                FirstName = "John",
-                LastName = "Doe",
+                FirstName = "john",
+                LastName = "doe",
                 PhoneNumber = "+1234567890"
             };
             var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
             signUpResponse.EnsureSuccessStatusCode();
         }
 
-        
-
         // login as admin
         await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}");
+        var searchResponse = await _client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}&page=1&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal("john", result[0].FirstName);
-        Assert.Equal("doe", result[0].LastName);
+        Assert.Equal(1, result.TotalCount);
+        Assert.Single(result.Items);
+        Assert.Equal("john", result.Items[0].FirstName);
+        Assert.Equal("doe", result.Items[0].LastName);
     }
 
     [Fact]
-    public async Task SearchUsers_WithMaxResults_LimitsResults()
+    public async Task SearchUsers_WithPagination_ReturnsCorrectPage()
     {
         // Arrange: Create multiple users
-        var users = Enumerable.Range(1, 5).Select(i => new SignUpCommand
+        for (int i = 1; i <= 25; i++)
         {
-            Email = $"maxtest{i}-{Guid.NewGuid()}@example.com",
-            Password = "StrongPassword123!",
-            ConfirmPassword = "StrongPassword123!",
-            FirstName = $"User{i}",
-            LastName = "Test",
-            PhoneNumber = $"+{i}234567890"
-        });
+            var signUpCommand = new SignUpCommand
+            {
+                Email = $"test-pagination-{i}@example.com",
+                Password = "StrongPassword123!",
+                ConfirmPassword = "StrongPassword123!",
+                FirstName = $"User{i}",
+                LastName = "Test",
+                PhoneNumber = $"070312345{i}"
+            };
 
-        foreach (var user in users)
-        {
-            var response = await _client.PostAsJsonAsync("/user/signup", user);
+            var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
             response.EnsureSuccessStatusCode();
         }
 
@@ -571,13 +572,18 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync("/user/search?maxResults=3");
+        var searchResponse = await _client.GetAsync("/user/search?page=2&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
         Assert.NotNull(result);
-        Assert.Equal(3, result.Count);
+        Assert.True(result.TotalCount >= 25);
+        Assert.Equal(10, result.Items.Count);
+        Assert.Equal(2, result.Page);
+        Assert.Equal(10, result.PageSize);
+        Assert.True(result.HasPreviousPage);
+        Assert.True(result.HasNextPage);
     }
 }

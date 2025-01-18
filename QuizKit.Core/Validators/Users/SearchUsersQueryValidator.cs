@@ -5,11 +5,18 @@ namespace QuizKit.Core.Validators.Users;
 
 public class SearchUsersQueryValidator : AbstractValidator<SearchUsersQuery>
 {
+    private const int MaxPageSize = 100;
+
     public SearchUsersQueryValidator()
     {
-        RuleFor(x => x.MaxResults)
+        RuleFor(x => x.Page)
             .GreaterThan(0)
-            .When(x => x.MaxResults.HasValue)
-            .WithMessage("Maximum results must be greater than 0");
+            .WithMessage("Page number must be greater than 0");
+
+        RuleFor(x => x.PageSize)
+            .GreaterThan(0)
+            .WithMessage("Page size must be greater than 0")
+            .LessThanOrEqualTo(MaxPageSize)
+            .WithMessage($"Page size cannot be greater than {MaxPageSize}");
     }
 }

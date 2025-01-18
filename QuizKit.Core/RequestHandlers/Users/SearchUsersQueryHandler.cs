@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using QuizKit.Common.Models;
 using QuizKit.Common.Models.Users;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Results;
@@ -7,12 +8,11 @@ using QuizKit.Core.Data;
 
 namespace QuizKit.Core.RequestHandlers.Users;
 
-public class SearchUsersQueryHandler(QuizDbContext dbContext) : IRequestHandler<SearchUsersQuery, Result<List<UserViewModel>>>
+public class SearchUsersQueryHandler(QuizDbContext dbContext) : IRequestHandler<SearchUsersQuery, Result<PagedList<UserViewModel>>>
 {
     private readonly QuizDbContext _dbContext = dbContext;
-    private const int DefaultMaxResults = 10;
 
-    public async Task<Result<List<UserViewModel>>> Handle(SearchUsersQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedList<UserViewModel>>> Handle(SearchUsersQuery request, CancellationToken cancellationToken)
     {
         var query = _dbContext.Users.AsQueryable();
 
@@ -26,9 +26,11 @@ public class SearchUsersQueryHandler(QuizDbContext dbContext) : IRequestHandler<
                 (u.PhoneNumber != null && u.PhoneNumber.Contains(searchTerm)));
         }
 
-        var maxResults = request.MaxResults ?? DefaultMaxResults;
-        var users = await query
-            .Take(maxResults)
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderBy(u => u.Email)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(u => new UserViewModel
             {
                 Id = u.Id,
@@ -39,6 +41,14 @@ public class SearchUsersQueryHandler(QuizDbContext dbContext) : IRequestHandler<
             })
             .ToListAsync(cancellationToken);
 
-        return Result.Success(users);
+        var pagedList = new PagedList<UserViewModel>
+        {
+            Items = items,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalCount = totalCount
+        };
+
+        return Result.Success(pagedList);
     }
 }

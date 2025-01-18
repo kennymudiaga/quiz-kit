@@ -2,8 +2,12 @@ using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using QuizKit.Api.Controllers;
+using QuizKit.Common.Models;
+using QuizKit.Common.Models.Users;
 using QuizKit.Common.Requests.Users;
+using QuizKit.Common.Results;
 
 namespace QuizKit.Tests.Controllers;
 
@@ -279,34 +283,45 @@ public class UserControllerTests
         // Arrange
         var users = new List<UserViewModel>
         {
-            new() { Id = "1", Email = "user1@example.com", FirstName = "John", LastName = "Doe", PhoneNumber = "1234567890" }
+            new() { Id = "1", Email = "user1@example.com", FirstName = "john", LastName = "doe", PhoneNumber = "1234567890" }
+        };
+        var pagedList = new PagedList<UserViewModel>
+        {
+            Items = users,
+            Page = 1,
+            PageSize = 20,
+            TotalCount = 1
         };
         _mockMediator
             .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
-            .ReturnsAsync(Result<List<UserViewModel>>.Success(users));
+            .ReturnsAsync(Result.Success(pagedList));
 
         // Act
-        var result = await _controller.SearchUsers("john", 10);
+        var result = await _controller.SearchUsers("john", 1, 20);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedResult = Assert.IsType<List<UserViewModel>>(okResult.Value);
-        Assert.Single(returnedResult);
+        var data = Assert.IsType<PagedList<UserViewModel>>(okResult.Value);
+        Assert.Single(data.Items);
+        Assert.Equal(1, data.TotalCount);
     }
 
-    [Fact]
-    public async Task SearchUsers_WithInvalidMaxResults_ReturnsBadRequest()
+    [Theory]
+    [InlineData(0, 20)]  // Invalid page
+    [InlineData(1, 0)]   // Invalid page size
+    [InlineData(1, 101)] // Page size too large
+    public async Task SearchUsers_WithInvalidParameters_ReturnsBadRequest(int page, int pageSize)
     {
         // Arrange
         _mockMediator
             .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
-            .ReturnsAsync(() => (new Result<List<UserViewModel>> { Message = "Maximum results must be greater than 0", Status = ResultStatus.BadRequest }));
+            .ReturnsAsync(() => new Result<PagedList<UserViewModel>> { Message = "Invalid pagination parameters", Status = ResultStatus.BadRequest });
 
         // Act
-        var result = await _controller.SearchUsers(null, -1);
+        var result = await _controller.SearchUsers(null, page, pageSize);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal("Maximum results must be greater than 0", ((Result)badRequestResult.Value!).Message);
+        Assert.Equal("Invalid pagination parameters", ((Result)badRequestResult.Value!).Message);
     }
 }
