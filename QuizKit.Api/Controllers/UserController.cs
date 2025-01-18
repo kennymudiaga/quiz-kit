@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Models.Users;
 using QuizKit.Api.Extensions;
-using QuizKit.Common.Results;
 using QuizKit.Common.Constants;
 using QuizKit.Common.Models;
 
@@ -122,7 +121,7 @@ public class UserController(IMediator mediator) : ControllerBase
     /// <returns>Search results or error</returns>
     [HttpGet("search")]
     [Authorize(Policies.Admin)]
-    [ProducesResponseType(typeof(Result<PagedList<UserViewModel>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedList<UserViewModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SearchUsers([FromQuery] string? searchTerm, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
