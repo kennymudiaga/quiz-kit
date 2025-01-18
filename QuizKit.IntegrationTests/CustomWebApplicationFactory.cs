@@ -1,9 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QuizKit.Api;
+using QuizKit.Common.Models.Users;
+using QuizKit.Common.Requests.Users;
+using QuizKit.Common.Results;
 using QuizKit.Core.Data;
 using QuizKit.Core.Options;
 using QuizKit.Core.ServiceContracts;
@@ -44,6 +48,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             }
             services.AddScoped<ITokenGenerator, MockTokenGenerator>();
 
+            // Add custom user policy options
             services.AddSingleton(new UserPolicyOptions
             {
                 EnableLockout = true,
@@ -51,6 +56,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 PasswordLockoutDuration = 5,
                 PasswordTokenTimeout = 0.33d, // 20 seconds
             });
+
+            // Add a Test Login Pipeline Behavior
+            services.AddScoped(typeof(IPipelineBehavior<LoginCommand, Result<LoggedInUserModel>>), typeof(LoginTestUserBehavior));
 
             // Build the service provider
             var sp = services.BuildServiceProvider();

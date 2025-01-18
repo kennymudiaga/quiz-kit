@@ -402,4 +402,182 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
     }
+
+    [Fact]
+    public async Task CheckEmailAvailability_WithAvailableEmail_ReturnsNoContent()
+    {
+        // Arrange
+        var email = $"available-{Guid.NewGuid()}@example.com";
+
+        // Act
+        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CheckEmailAvailability_WithExistingEmail_ReturnsBadRequest()
+    {
+        // Arrange: First create a user
+        var email = $"existing-{Guid.NewGuid()}@example.com";
+        var signUpCommand = new SignUpCommand
+        {
+            Email = email,
+            Password = "StrongPassword123!",
+            ConfirmPassword = "StrongPassword123!",
+            FirstName = "Test",
+            LastName = "User",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        signUpResponse.EnsureSuccessStatusCode();
+
+        // Act
+        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Assert.Contains("already in use", responseContent);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("invalid-email")]
+    [InlineData("@invalid.com")]
+    public async Task CheckEmailAvailability_WithInvalidEmail_ReturnsBadRequest(string email)
+    {
+        // Act
+        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SearchUsers_WithNoSearchTerm_ReturnsAllUsers()
+    {
+        // Arrange: Create some users
+        var users = new[]
+        {
+            new SignUpCommand
+            {
+                Email = $"user1-{Guid.NewGuid()}@example.com",
+                Password = "StrongPassword123!",
+                ConfirmPassword = "StrongPassword123!",
+                FirstName = "John",
+                LastName = "Doe",
+                PhoneNumber = "+1234567890"
+            },
+            new SignUpCommand
+            {
+                Email = $"user2-{Guid.NewGuid()}@example.com",
+                Password = "StrongPassword123!",
+                ConfirmPassword = "StrongPassword123!",
+                FirstName = "Jane",
+                LastName = "Smith",
+                PhoneNumber = "+987654321"
+            }
+        };
+
+        foreach (var user in users)
+        {
+            var response = await _client.PostAsJsonAsync("/user/signup", user);
+            var raw = await response.Content.ReadAsStringAsync();
+            response.EnsureSuccessStatusCode();
+        }
+
+        // login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        // Act
+        var searchResponse = await _client.GetAsync("/user/search");
+
+        // Assert
+        searchResponse.EnsureSuccessStatusCode();
+        var content = await searchResponse.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        Assert.NotNull(result);
+        // There should be at least 2 users
+        Assert.True(result.Count >= 2, "Expected at least 2 results");
+    }
+
+    [Theory]
+    [InlineData("John")]
+    [InlineData("Doe")]
+    [InlineData("1234567890")]
+    public async Task SearchUsers_WithSearchTerm_ReturnsMatchingUsers(string searchTerm)
+    {
+        // Arrange: Create users
+        var email = $"searchtest-matches-users@example.com";
+
+        // check if email is available - only sign up if it is
+        var emailAvailableResponse = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+        if (emailAvailableResponse.IsSuccessStatusCode)
+        {
+            var signUpCommand = new SignUpCommand
+            {
+                Email = email,
+                Password = "StrongPassword123!",
+                ConfirmPassword = "StrongPassword123!",
+                FirstName = "John",
+                LastName = "Doe",
+                PhoneNumber = "+1234567890"
+            };
+            var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+            signUpResponse.EnsureSuccessStatusCode();
+        }
+
+        
+
+        // login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        // Act
+        var searchResponse = await _client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}");
+
+        // Assert
+        searchResponse.EnsureSuccessStatusCode();
+        var content = await searchResponse.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal("john", result[0].FirstName);
+        Assert.Equal("doe", result[0].LastName);
+    }
+
+    [Fact]
+    public async Task SearchUsers_WithMaxResults_LimitsResults()
+    {
+        // Arrange: Create multiple users
+        var users = Enumerable.Range(1, 5).Select(i => new SignUpCommand
+        {
+            Email = $"maxtest{i}-{Guid.NewGuid()}@example.com",
+            Password = "StrongPassword123!",
+            ConfirmPassword = "StrongPassword123!",
+            FirstName = $"User{i}",
+            LastName = "Test",
+            PhoneNumber = $"+{i}234567890"
+        });
+
+        foreach (var user in users)
+        {
+            var response = await _client.PostAsJsonAsync("/user/signup", user);
+            response.EnsureSuccessStatusCode();
+        }
+
+        // login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        // Act
+        var searchResponse = await _client.GetAsync("/user/search?maxResults=3");
+
+        // Assert
+        searchResponse.EnsureSuccessStatusCode();
+        var content = await searchResponse.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<List<UserViewModel>>(content, _jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+    }
 }

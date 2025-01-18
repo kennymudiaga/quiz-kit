@@ -5,13 +5,13 @@ namespace QuizKit.Tests.TestHelpers;
 
 public static class TestUser
 {
-    public static UserProfile Create(string email, bool isLocked = false)
+    public static UserProfile Create(string email, bool isLocked = false, string firstName = "Test", string lastName = "User")
     {
         var user = new UserProfile(new SignUpCommand
         {
             Email = email,
-            FirstName = "Test",
-            LastName = "User"
+            FirstName = firstName,
+            LastName = lastName,
         });
 
         if (isLocked)

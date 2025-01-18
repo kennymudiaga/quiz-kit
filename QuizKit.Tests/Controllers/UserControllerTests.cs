@@ -220,4 +220,93 @@ public class UserControllerTests
         var noContentResult = Assert.IsType<NoContentResult>(result);
         Assert.Equal(StatusCodes.Status204NoContent, noContentResult.StatusCode);
     }
+
+    [Fact]
+    public async Task CheckEmailAvailability_WithAvailableEmail_ReturnsNoContent()
+    {
+        // Arrange
+        var email = "available@example.com";
+        _mockMediator
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.CheckEmailAvailability(email);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task CheckEmailAvailability_WithExistingEmail_ReturnsBadRequest()
+    {
+        // Arrange
+        var email = "existing@example.com";
+        _mockMediator
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
+            .ReturnsAsync(Result.BadRequest("Email is already in use"));
+
+        // Act
+        var result = await _controller.CheckEmailAvailability(email);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
+        Assert.Equal("Email is already in use", ((Result)badRequestResult.Value!).Message);
+    }
+
+    [Fact]
+    public async Task CheckEmailAvailability_WithInvalidEmail_ReturnsBadRequest()
+    {
+        // Arrange
+        var email = "invalid-email";
+        _mockMediator
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
+            .ReturnsAsync(Result.BadRequest("Please provide a valid email address"));
+
+        // Act
+        var result = await _controller.CheckEmailAvailability(email);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
+        Assert.Equal("Please provide a valid email address", ((Result)badRequestResult.Value!).Message);
+    }
+
+    [Fact]
+    public async Task SearchUsers_WithValidQuery_ReturnsOkWithResults()
+    {
+        // Arrange
+        var users = new List<UserViewModel>
+        {
+            new() { Id = "1", Email = "user1@example.com", FirstName = "John", LastName = "Doe", PhoneNumber = "1234567890" }
+        };
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
+            .ReturnsAsync(Result<List<UserViewModel>>.Success(users));
+
+        // Act
+        var result = await _controller.SearchUsers("john", 10);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedResult = Assert.IsType<List<UserViewModel>>(okResult.Value);
+        Assert.Single(returnedResult);
+    }
+
+    [Fact]
+    public async Task SearchUsers_WithInvalidMaxResults_ReturnsBadRequest()
+    {
+        // Arrange
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
+            .ReturnsAsync(() => (new Result<List<UserViewModel>> { Message = "Maximum results must be greater than 0", Status = ResultStatus.BadRequest }));
+
+        // Act
+        var result = await _controller.SearchUsers(null, -1);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Maximum results must be greater than 0", ((Result)badRequestResult.Value!).Message);
+    }
 }
