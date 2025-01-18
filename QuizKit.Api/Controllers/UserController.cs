@@ -1,4 +1,3 @@
-using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,8 +16,8 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPost("signup")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(LoggedInUserModel), (int)HttpStatusCode.Created)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(LoggedInUserModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SignUp([FromBody] SignUpCommand command)
     {
         var result = await _mediator.Send(command);
@@ -27,8 +26,8 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(LoggedInUserModel), (int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(LoggedInUserModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         var result = await _mediator.Send(command);
@@ -36,8 +35,8 @@ public class UserController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("change-password")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
     {
         var result = await _mediator.Send(command);
@@ -46,9 +45,19 @@ public class UserController(IMediator mediator) : ControllerBase
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
+
+    [HttpPost("set-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetPassword([FromBody] SetPasswordCommand command)
     {
         var result = await _mediator.Send(command);
         return result.ToActionResult();

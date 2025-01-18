@@ -1,5 +1,4 @@
 using QuizKit.Common.Requests.Users;
-using QuizKit.Core.Utils;
 
 namespace QuizKit.Core.Entities;
 
@@ -35,7 +34,7 @@ public record UserProfile : IdEntity
     public DateTime? LockoutExpiry { get; protected set; }
     public DateTime DateCreated { get; protected set; }
     public DateTime? LastPasswordChange { get; protected set; }
-    public string? PasswordToken { get; protected set; }
+    public string? PasswordTokenHash { get; protected set; }
     public DateTime? PasswordTokenExpiry { get; protected set; }
     public string? CreatorId { get; set; }
     public DateTime? LastLogin { get; protected set; }
@@ -47,14 +46,14 @@ public record UserProfile : IdEntity
     public IReadOnlyCollection<UserOrganization> Organizations => _organizations;
 
     public bool IsPasswordTokenExpired =>
-        !string.IsNullOrEmpty(PasswordToken) &&
+        !string.IsNullOrEmpty(PasswordTokenHash) &&
         PasswordTokenExpiry.HasValue &&
         DateTime.UtcNow > PasswordTokenExpiry;
 
     public void SetPassword(string passwordHash)
     {
         PasswordHash = passwordHash;
-        PasswordToken = null;
+        PasswordTokenHash = null;
         PasswordTokenExpiry = null;
         LastPasswordChange = DateTime.UtcNow;
 
@@ -64,7 +63,7 @@ public record UserProfile : IdEntity
 
     public void SetPasswordToken(string token, int expiryMinutes)
     {
-        PasswordToken = token;
+        PasswordTokenHash = token;
         PasswordTokenExpiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
     }
 
