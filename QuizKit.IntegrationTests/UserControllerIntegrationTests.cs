@@ -298,4 +298,108 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
+
+    [Fact]
+    public async Task SetPassword_WithValidDetails_Succeeds()
+    {
+        // Arrange
+        var email = $"set-password-{Guid.NewGuid()}@example.com";
+
+        var signUpCommand = new SignUpCommand
+        {
+            Email = email,
+            Password = "StrongPassword123!",
+            ConfirmPassword = "StrongPassword123!",
+            FirstName = "Change",
+            LastName = "Password",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        signUpResponse.EnsureSuccessStatusCode();
+
+        // Then, request a password reset        
+        var resetCommand = new RequestPasswordResetCommand { Email = email };
+        var resetResponse = await _client.PostAsJsonAsync("/api/user/reset-password", resetCommand);
+        resetResponse.EnsureSuccessStatusCode();
+
+        var token = "12345678";
+        var newPassword = "NewPassword123!";
+        // Set the new password
+        var setPasswordCommand = new SetPasswordCommand
+        {
+            Email = email,
+            Token = token,
+            Password = newPassword,
+            ConfirmPassword = newPassword
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/user/set-password", setPasswordCommand);
+        var text = await response.Content.ReadAsStringAsync();
+        // Assert
+        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        // Verify login with new password
+        var loginCommand = new LoginCommand
+        {
+            Email = email,
+            Password = newPassword
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        loginResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task SetPassword_WithExpiredToken_Fails()
+    {
+        // Arrange
+        var email = $"set-password-expired-{Guid.NewGuid()}@example.com";
+        var oldPassword = "StrongPassword123!";
+        var signUpCommand = new SignUpCommand
+        {
+            Email = email,
+            Password = oldPassword,
+            ConfirmPassword = oldPassword,
+            FirstName = "Change",
+            LastName = "Password",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        signUpResponse.EnsureSuccessStatusCode();
+
+        // Then, request a password reset        
+        var resetCommand = new RequestPasswordResetCommand { Email = email };
+        var resetResponse = await _client.PostAsJsonAsync("/api/user/reset-password", resetCommand);
+        resetResponse.EnsureSuccessStatusCode();
+
+        //  Wait 20 seconds for the token to expire
+        await Task.Delay(TimeSpan.FromSeconds(20));
+
+        var token = "12345678";
+        var newPassword = "NewPassword123!";
+        // Set the new password
+        var setPasswordCommand = new SetPasswordCommand
+        {
+            Email = email,
+            Token = token,
+            Password = newPassword,
+            ConfirmPassword = newPassword
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/user/set-password", setPasswordCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        // Verify login with old password still works
+        var loginCommand = new LoginCommand
+        {
+            Email = email,
+            Password = oldPassword,
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+    }
 }

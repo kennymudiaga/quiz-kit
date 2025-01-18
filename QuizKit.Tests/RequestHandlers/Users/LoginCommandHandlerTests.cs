@@ -14,7 +14,7 @@ namespace QuizKit.Tests.RequestHandlers.Users;
 
 public class LoginCommandHandlerTests
 {
-    private readonly Mock<IPasswordHasher<string>> _mockPasswordHasher;
+    private readonly Mock<IPasswordHasher<string>> _mockPasswordHasher = new();
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly JwtProvider _jwtProvider;
     private readonly UserPolicyOptions _userPolicyOptions;

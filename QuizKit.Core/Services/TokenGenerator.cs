@@ -24,7 +24,7 @@ public class TokenGenerator : ITokenGenerator
             TokenType.Numeric => Numeric,
             TokenType.Alphabetic => Alphabetic,
             TokenType.Alphanumeric => Alphanumeric,
-            _ => throw new ArgumentOutOfRangeException(nameof(tokenType), "Unknown token type.")
+            _ => throw new ArgumentException("Unknown token type.", nameof(tokenType))
         };
 
         var result = new char[length];

@@ -14,7 +14,7 @@ public class UserPolicyOptions : OptionsBase
     /// <summary>
     /// Gets or sets how long a password reset token is valid - in minutes
     /// </summary>
-    public virtual int PasswordTokenTimeout { get; init; } = 5;
+    public virtual double PasswordTokenTimeout { get; init; } = 5;
 
     /// <summary>
     /// Gets or sets how long an email verification token is valid - in minutes
@@ -41,8 +41,8 @@ public class UserPolicyOptions : OptionsBase
     /// </summary>
     public virtual int InviteExpiryHours { get; init; } = 72;
 
-    public int MinPasswordLength { get; set; }
-    public int MaxPasswordLength { get; set; }
+    public int MinPasswordLength { get; set; } = 8;
+    public int MaxPasswordLength { get; set; } = 50;
 
     public virtual string AuthenticationScheme { get; init; } = JwtBearerDefaults.AuthenticationScheme;
 }

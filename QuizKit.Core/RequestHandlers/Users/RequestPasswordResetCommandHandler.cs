@@ -1,17 +1,21 @@
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using QuizKit.Common.Enums;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Results;
 using QuizKit.Core.Data;
+using QuizKit.Core.Options;
 using QuizKit.Core.ServiceContracts;
 
 namespace QuizKit.Core.RequestHandlers.Users;
 
 public class RequestPasswordResetCommandHandler(
     QuizDbContext dbContext,
+    UserPolicyOptions userPolicyOptions,
     ITokenGenerator tokenGenerator,
+    IPasswordHasher<string> passwordHasher,
     ILogger<RequestPasswordResetCommandHandler> logger
 ) : IRequestHandler<RequestPasswordResetCommand, Result>
 {
@@ -39,14 +43,19 @@ public class RequestPasswordResetCommandHandler(
 
         try
         {
-            // Generate a 6-digit numeric code
-            var resetCode = _tokenGenerator.GenerateToken(6, TokenType.Numeric);
-            
+            // Generate an 8-digit numeric code
+            var resetCode = _tokenGenerator.GenerateToken(8, TokenType.Numeric);
+            var tokenHash = passwordHasher.HashPassword(user.Email!, resetCode);
+            // Set the password reset token and expiration
+            user.SetPasswordToken(tokenHash, userPolicyOptions.PasswordTokenTimeout);
+
+            _dbContext.Update(user);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             // TODO: Implement email sending service to send reset code to user
-            // This is a placeholder for actual email sending logic
             _logger.LogInformation("Password reset code generated for user: {Email}", user.Email);
 
-            return Result.Success(); // In a real implementation, you might want to store the reset code
+            return Result.Success();
         }
         catch (Exception ex)
         {

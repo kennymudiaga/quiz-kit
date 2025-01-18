@@ -4,9 +4,9 @@ using QuizKit.Core.Options;
 
 namespace QuizKit.Core.Validators.Users;
 
-public class SetPasswordComandValidator: AbstractValidator<SetPasswordCommand>
+public class SetPasswordCommandValidator: AbstractValidator<SetPasswordCommand>
 {
-    public SetPasswordComandValidator(UserPolicyOptions userPolicyOptions)
+    public SetPasswordCommandValidator(UserPolicyOptions userPolicyOptions)
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
         RuleFor(x => x.Token).NotEmpty();

@@ -61,10 +61,10 @@ public record UserProfile : IdEntity
         LockoutExpiry = null;
     }
 
-    public void SetPasswordToken(string token, int expiryMinutes)
+    public void SetPasswordToken(string token, double expiryMinutes)
     {
         PasswordTokenHash = token;
-        PasswordTokenExpiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        PasswordTokenExpiry = DateTime.UtcNow.AddSeconds(60 * expiryMinutes);
     }
 
     public UserRole AddRole(string role)

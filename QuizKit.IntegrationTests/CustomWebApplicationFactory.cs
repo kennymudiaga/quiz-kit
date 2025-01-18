@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QuizKit.Api;
 using QuizKit.Core.Data;
+using QuizKit.Core.Options;
+using QuizKit.Core.ServiceContracts;
 
 namespace QuizKit.IntegrationTests;
 
@@ -33,6 +35,23 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase(_dbName);
             });
 
+            // Replace the ITokenGenerator service with a mock
+            var descriptorTokenGenerator = services.SingleOrDefault(
+                d => d.ServiceType == typeof(ITokenGenerator));
+            if (descriptorTokenGenerator != null)
+            {
+                services.Remove(descriptorTokenGenerator);
+            }
+            services.AddScoped<ITokenGenerator, MockTokenGenerator>();
+
+            services.AddSingleton(new UserPolicyOptions
+            {
+                EnableLockout = true,
+                MaxPasswordFailCount = 3,
+                PasswordLockoutDuration = 5,
+                PasswordTokenTimeout = 0.33d, // 20 seconds
+            });
+
             // Build the service provider
             var sp = services.BuildServiceProvider();
 
@@ -51,7 +70,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 {"ConnectionStrings:DefaultConnection", "DataSource=:memory:"},
-                {"Environment", "Testing"}
+                {"Environment", "Testing"},
             });
         });
     }

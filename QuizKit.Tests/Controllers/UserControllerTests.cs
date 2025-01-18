@@ -1,5 +1,6 @@
 using System.Net;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuizKit.Api.Controllers;
 using QuizKit.Common.Requests.Users;
@@ -177,5 +178,46 @@ public class UserControllerTests
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal((int)HttpStatusCode.BadRequest, badRequestResult.StatusCode);
         Assert.Equal("Invalid email format", ((Result)badRequestResult.Value!).Message);
+    }
+
+    [Fact]
+    public async Task SetPassword_WithInvalidDetails_ReturnsBadRequest()
+    {
+        // Arrange
+        var setPasswordCommand = new SetPasswordCommand();
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), default))
+            .ReturnsAsync(new Failure("Invalid set password details", ResultStatus.BadRequest));
+
+        // Act
+        var result = await _controller.SetPassword(setPasswordCommand);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
+        Assert.Equal("Invalid set password details", ((Result)badRequestResult.Value!).Message);
+    }
+
+    [Fact]
+    public async Task SetPassword_WithValidDetails_ReturnsNoContent()
+    {
+        // Arrange
+        var setPasswordCommand = new SetPasswordCommand
+        {
+            Email = "test@example.com",
+            Token = "validToken123",
+            Password = "NewPassword123!",
+            ConfirmPassword = "NewPassword123!"
+        };
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), default))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.SetPassword(setPasswordCommand);
+
+        // Assert
+        var noContentResult = Assert.IsType<NoContentResult>(result);
+        Assert.Equal(StatusCodes.Status204NoContent, noContentResult.StatusCode);
     }
 }
