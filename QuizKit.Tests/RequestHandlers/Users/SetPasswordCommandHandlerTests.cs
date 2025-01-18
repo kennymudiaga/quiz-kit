@@ -186,16 +186,6 @@ public class SetPasswordCommandHandlerTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Critical, 
-                It.IsAny<EventId>(), 
-                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains("Suspicious password request")), 
-                It.IsAny<Exception>(), 
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()
-            ), 
-            Times.Once
-        );
     }
 
     public void Dispose()

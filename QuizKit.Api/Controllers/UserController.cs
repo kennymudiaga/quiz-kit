@@ -9,7 +9,7 @@ namespace QuizKit.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class UserController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;

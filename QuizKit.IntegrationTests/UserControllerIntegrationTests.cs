@@ -37,7 +37,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
 
         // Assert
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -77,7 +77,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -103,7 +103,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             PhoneNumber = "+1234567890"
         };
 
-        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
         var signUpResponseContent = await signUpResponse.Content.ReadAsStringAsync();
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             signUpResponseContent,
@@ -120,7 +120,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = signUpCommand.Password
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
 
         // Assert
         var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
@@ -159,7 +159,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             PhoneNumber = "+1234567890"
         };
 
-        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             await signUpResponse.Content.ReadAsStringAsync(),
             _jsonOptions
@@ -175,7 +175,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = signUpCommand.Password
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
         loginResponse.EnsureSuccessStatusCode();
         var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             await loginResponse.Content.ReadAsStringAsync(),
@@ -192,7 +192,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             NewPassword = "NewStrongPassword456!"
         };
 
-        var changePasswordResponse = await _client.PostAsJsonAsync("/api/user/change-password", changePasswordCommand);
+        var changePasswordResponse = await _client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
 
         // Assert
         var changePasswordResponseContent = await changePasswordResponse.Content.ReadAsStringAsync();
@@ -210,7 +210,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = changePasswordCommand.NewPassword
         };
 
-        var newLoginResponse = await _client.PostAsJsonAsync("/api/user/login", newLoginCommand);
+        var newLoginResponse = await _client.PostAsJsonAsync("/user/login", newLoginCommand);
         newLoginResponse.EnsureSuccessStatusCode();
     }
 
@@ -225,7 +225,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        var response = await _client.PostAsJsonAsync("/user/login", loginCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -248,7 +248,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/change-password", changePasswordCommand);
+        var response = await _client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -268,7 +268,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         var requestPasswordResetCommand = new RequestPasswordResetCommand
@@ -277,7 +277,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/reset-password", requestPasswordResetCommand);
+        var response = await _client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -293,7 +293,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/reset-password", requestPasswordResetCommand);
+        var response = await _client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -314,12 +314,12 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         // Then, request a password reset        
         var resetCommand = new RequestPasswordResetCommand { Email = email };
-        var resetResponse = await _client.PostAsJsonAsync("/api/user/reset-password", resetCommand);
+        var resetResponse = await _client.PostAsJsonAsync("/user/reset-password", resetCommand);
         resetResponse.EnsureSuccessStatusCode();
 
         var token = "12345678";
@@ -334,7 +334,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/set-password", setPasswordCommand);
+        var response = await _client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
         var text = await response.Content.ReadAsStringAsync();
         // Assert
         response.EnsureSuccessStatusCode();
@@ -346,7 +346,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = email,
             Password = newPassword
         };
-        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
         loginResponse.EnsureSuccessStatusCode();
     }
 
@@ -365,12 +365,12 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/api/user/signup", signUpCommand);
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         // Then, request a password reset        
         var resetCommand = new RequestPasswordResetCommand { Email = email };
-        var resetResponse = await _client.PostAsJsonAsync("/api/user/reset-password", resetCommand);
+        var resetResponse = await _client.PostAsJsonAsync("/user/reset-password", resetCommand);
         resetResponse.EnsureSuccessStatusCode();
 
         //  Wait 20 seconds for the token to expire
@@ -388,7 +388,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/user/set-password", setPasswordCommand);
+        var response = await _client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -399,7 +399,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = email,
             Password = oldPassword,
         };
-        var loginResponse = await _client.PostAsJsonAsync("/api/user/login", loginCommand);
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
     }
 }
