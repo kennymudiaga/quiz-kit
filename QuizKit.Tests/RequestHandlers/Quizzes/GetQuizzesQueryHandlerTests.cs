@@ -6,7 +6,6 @@ using QuizKit.Core.Data;
 using QuizKit.Core.Entities;
 using QuizKit.Core.RequestHandlers.Quizzes;
 using QuizKit.Tests.TestHelpers;
-using Xunit;
 
 namespace QuizKit.Tests.RequestHandlers.Quizzes;
 
@@ -40,7 +39,7 @@ public class GetQuizzesQueryHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Data.Items.Count);
+        Assert.Equal(2, result.Data!.Items.Count);
         Assert.Equal(5, result.Data.TotalCount);
         Assert.Equal(1, result.Data.Page);
         Assert.Equal(2, result.Data.PageSize);
@@ -58,7 +57,7 @@ public class GetQuizzesQueryHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.All(result.Data.Items, quiz => Assert.Equal(organizationId, quiz.OrganizationId));
+        Assert.All(result.Data!.Items, quiz => Assert.Equal(organizationId, quiz.OrganizationId));
     }
 
     [Fact]
@@ -73,7 +72,7 @@ public class GetQuizzesQueryHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Contains(result.Data.Items, quiz => quiz.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Data!.Items, quiz => quiz.Title!.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -88,7 +87,7 @@ public class GetQuizzesQueryHandlerTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.All(result.Data.Items, quiz => Assert.Equal(categoryId, quiz.CategoryId));
+        Assert.All(result.Data!.Items, quiz => Assert.Equal(categoryId, quiz.CategoryId));
     }
 
     private void SeedDatabase()
