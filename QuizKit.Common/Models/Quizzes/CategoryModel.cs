@@ -1,4 +1,4 @@
-﻿namespace QuizKit.Common.Models.Quizes;
+﻿namespace QuizKit.Common.Models.Quizzes;
 
 public record CategoryModel
 {
