@@ -28,20 +28,20 @@ public record Result
             TotalCount = totalCount,
         };
 
-    public static Result Failure(string error) => new Failure(error);
+    public static Failure Failure(string error) => new(error);
 
-    public static Result BadRequest(string error) => new Failure(error, ResultStatus.BadRequest);
+    public static Failure BadRequest(string error) => new(error, ResultStatus.BadRequest);
 
-    public static Result BadRequest(Dictionary<string, List<string>> errors, string? message = null)
-        => new Failure(message ?? "One or more validation errors occured.", ResultStatus.BadRequest)
+    public static Failure BadRequest(Dictionary<string, List<string>> errors, string? message = null)
+        => new(message ?? "One or more validation errors occured.", ResultStatus.BadRequest)
         {
             Message = message ?? "One or more validation errors occured.",
             Errors = errors,
         };
 
-    public static Result NotFound(string? error = null) => new Failure(error, ResultStatus.NotFound);
-    public static Result Unauthorized(string? error = null) => new Failure(error, ResultStatus.Unauthorized);
-    public static Result Forbidden(string? error = null) => new Failure(error, ResultStatus.Forbidden);
+    public static Failure NotFound(string? error = null) => new(error, ResultStatus.NotFound);
+    public static Failure Unauthorized(string? error = null) => new(error, ResultStatus.Unauthorized);
+    public static Failure Forbidden(string? error = null) => new(error, ResultStatus.Forbidden);
 
     public Result<TOut> ToResult<TOut>() => new()
     {

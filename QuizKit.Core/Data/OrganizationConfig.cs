@@ -4,9 +4,9 @@ using QuizKit.Common.Models.Users;
 
 namespace QuizKit.Core.Data;
 
-public record OrganizationConfig : IEntityTypeConfiguration<Organization>
+public record OrganizationConfig : IEntityTypeConfiguration<OrganizationModel>
 {
-    public void Configure(EntityTypeBuilder<Organization> builder)
+    public void Configure(EntityTypeBuilder<OrganizationModel> builder)
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasMaxLength(36);

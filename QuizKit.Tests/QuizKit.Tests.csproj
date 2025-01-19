@@ -34,8 +34,6 @@
     <Using Include="System.Net.Http.Json" />
     <Using Include="QuizKit.Common.Models.Users" />
     <Using Include="QuizKit.Common.Results" />
-    <Using Include="QuizKit.Core.Entities.Organization" Alias="CoreOrganization" />
-    <Using Include="QuizKit.Common.Models.Users.Organization" Alias="CommonOrganization" />
   </ItemGroup>
 
 </Project>

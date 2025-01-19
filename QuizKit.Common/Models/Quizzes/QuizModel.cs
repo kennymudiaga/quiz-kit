@@ -1,4 +1,4 @@
-﻿namespace QuizKit.Common.Models.Quizzes;
+namespace QuizKit.Common.Models.Quizzes;
 
 public record QuizModel
 {
@@ -11,5 +11,8 @@ public record QuizModel
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public string? ImageUrl { get; init; }
+    public int? TimeLimit { get; init; }
+    public bool RandomizeQuestions { get; init; }
+    public bool ShowAnswers { get; init; }
     public List<QuestionModel>? Questions { get; init; }
 }
