@@ -12,9 +12,6 @@ public static class TestUser
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            PhoneNumber = "+1234567890",
-            Password = "P@ssw0rd123",
-            ConfirmPassword = "P@ssw0rd123"
         });
 
         if (isLocked)
