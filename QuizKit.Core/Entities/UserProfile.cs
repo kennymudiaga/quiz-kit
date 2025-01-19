@@ -32,6 +32,7 @@ public record UserProfile : IdEntity
     public string? PhoneNumber { get; protected set; }
     public int AccessFailedCount { get; protected set; }
     public DateTime? LockoutExpiry { get; protected set; }
+    public string? LockoutReason { get; protected set; }
     public DateTime DateCreated { get; protected set; }
     public DateTime? LastPasswordChange { get; protected set; }
     public string? PasswordTokenHash { get; protected set; }
@@ -84,6 +85,7 @@ public record UserProfile : IdEntity
         if (lockoutEnabled && AccessFailedCount >= maxFailCount)
         {
             LockoutExpiry = DateTime.UtcNow.AddMinutes(lockoutMinutes);
+            LockoutReason = $"{AccessFailedCount} failed login attempts";
         }
         // TODO: Log access failure to UserAudit table
     }
@@ -93,6 +95,7 @@ public record UserProfile : IdEntity
         LastLogin = DateTime.UtcNow;
         AccessFailedCount = 0;
         LockoutExpiry = null;
+        LockoutReason = null;
         // TODO: Log access success to UserAudit table
     }
 
@@ -105,4 +108,11 @@ public record UserProfile : IdEntity
 
         _organizations.Add(new UserOrganization(Id, organizationId, role));
     }
+
+    public void LockOut(DateTime? lockoutExpiry, string lockoutReason)
+    {
+        LockoutExpiry = lockoutExpiry ?? DateTime.MaxValue;
+        LockoutReason = lockoutReason;
+    }
+
 }
