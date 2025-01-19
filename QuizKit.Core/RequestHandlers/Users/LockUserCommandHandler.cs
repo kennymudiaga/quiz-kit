@@ -13,11 +13,11 @@ public class LockUserCommandHandler(QuizDbContext context) : IRequestHandler<Loc
     public async Task<Result> Handle(LockUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (user == null)
         {
-            return new Failure("User not found.", ResultStatus.BadRequest);
+            return Result.BadRequest("User not found.");
         }
 
         // TODO: Log this action to UserAudit table

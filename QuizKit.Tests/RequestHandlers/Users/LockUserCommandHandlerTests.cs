@@ -31,7 +31,7 @@ public class LockUserCommandHandlerTests : IDisposable
         var user = TestUser.Create(email, false, "Locked", "User");
         var command = new LockUserCommand
         {
-            Email = email,
+            UserId = user.Id,
             Reason = "Violation of terms",
             LockoutExpiry = lockoutExpiry,
         };
@@ -59,7 +59,7 @@ public class LockUserCommandHandlerTests : IDisposable
         var user = TestUser.Create(email, false, "Locked", "Indefinite");
         var command = new LockUserCommand
         {
-            Email = email,
+            UserId = user.Id, 
             Reason = "Violation of terms",
         };
         _context.Add(user);
@@ -78,12 +78,12 @@ public class LockUserCommandHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithNonexistentEmail_ReturnsNotFound()
+    public async Task Handle_WithNonexistentUserId_ReturnsNotFound()
     {
         // Arrange
         var command = new LockUserCommand
         {
-            Email = "nonexistent@example.com",
+            UserId = "nonexistent@example.com",
             Reason = "Violation of terms"
         };
 
@@ -113,7 +113,7 @@ public class LockUserCommandHandlerTests : IDisposable
 
         var command = new LockUserCommand
         {
-            Email = email,
+            UserId = user.Id,
             Reason = "Another violation",
             LockoutExpiry = lockoutExpiry,
         };

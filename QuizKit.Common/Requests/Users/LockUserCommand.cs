@@ -6,9 +6,9 @@ namespace QuizKit.Common.Requests.Users;
 public class LockUserCommand : IRequest<Result>
 {
     /// <summary>
-    /// The email address of the user to lock.
+    /// The id of the user to lock.
     /// </summary>
-    public string Email { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// The reason for locking the account.

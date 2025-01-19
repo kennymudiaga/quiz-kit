@@ -324,4 +324,65 @@ public class UserControllerTests
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("Invalid pagination parameters", ((Result)badRequestResult.Value!).Message);
     }
+
+    [Fact]
+    public async Task Lock_WithValidCommand_ReturnsNoContent()
+    {
+        // Arrange
+        var command = new LockUserCommand
+        {
+            UserId = "test@example.com",
+            Reason = "Suspicious activity",
+            LockoutExpiry = DateTime.UtcNow.AddDays(7)
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.Lock(command);
+
+        // Assert
+        var noContentResult = Assert.IsType<NoContentResult>(result);
+        Assert.Equal(StatusCodes.Status204NoContent, noContentResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lock_WithInvalidCommand_ReturnsBadRequest()
+    {
+        // Arrange
+        var command = new LockUserCommand
+        {
+            UserId = "test@example.com",
+            Reason = "Suspicious activity"
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(new Failure("Invalid command", ResultStatus.BadRequest));
+
+        // Act
+        var result = await _controller.Lock(command);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lock_WithNonExistentUser_ReturnsNotFound()
+    {
+        // Arrange
+        var command = new LockUserCommand
+        {
+            UserId = "nonexistent@example.com",
+            Reason = "Suspicious activity"
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(new Failure("User not found", ResultStatus.NotFound));
+
+        // Act
+        var result = await _controller.Lock(command);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(StatusCodes.Status404NotFound, notFoundResult.StatusCode);
+    }
 }

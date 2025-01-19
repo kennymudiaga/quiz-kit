@@ -586,4 +586,95 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         Assert.True(result.HasPreviousPage);
         Assert.True(result.HasNextPage);
     }
+
+    [Fact]
+    public async Task Lock_WithValidCommand_ReturnsSuccess()
+    {
+        // Arrange
+        var signUpCommand = new SignUpCommand
+        {
+            Email = $"lock.test.{Guid.NewGuid()}@example.com",
+            Password = "P@ssw0rd123",
+            ConfirmPassword = "P@ssw0rd123",
+            FirstName = "Lock",
+            LastName = "Test",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        Assert.True(signUpResponse.IsSuccessStatusCode, 
+            $"Failed to create test user. Status: {signUpResponse.StatusCode}");
+        // Get user id from response
+        var signedUpUser = JsonSerializer.Deserialize<LoggedInUserModel>(
+            await signUpResponse.Content.ReadAsStringAsync(),
+            _jsonOptions
+        );
+        Assert.NotNull(signedUpUser);
+
+        // Login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        var lockCommand = new LockUserCommand
+        {
+            UserId = signedUpUser.Id!,
+            Reason = "Integration test lock",
+            LockoutExpiry = DateTime.UtcNow.AddDays(7)
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        // Verify user is locked
+        var loginCommand = new LoginCommand
+        {
+            Email = signUpCommand.Email,
+            Password = signUpCommand.Password
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        Assert.Equal(HttpStatusCode.BadRequest, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lock_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange
+        // Login as regular user
+        await _client.LoginAsync(LoginTestUserBehavior.basicUserEmail, "StrongPassword123!");
+
+        var lockCommand = new LockUserCommand
+        {
+            UserId = $"test.{Guid.NewGuid()}@example.com",
+            Reason = "Integration test lock",
+            LockoutExpiry = DateTime.UtcNow.AddDays(7)
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lock_WithNonExistentUser_ReturnsNotFound()
+    {
+        // Arrange
+        // Login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        var lockCommand = new LockUserCommand
+        {
+            UserId = Guid.NewGuid().ToString(),
+            Reason = "Integration test lock",
+            LockoutExpiry = DateTime.UtcNow.AddDays(7)
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

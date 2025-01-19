@@ -21,42 +21,48 @@ public class LockUserCommandValidatorTests
     public async Task Validate_EmptyEmail_ShouldHaveError(string email)
     {
         // Arrange
-        var command = new LockUserCommand { Email = email };
+        var command = new LockUserCommand { UserId = email };
 
         // Act
         var result = await _validator.TestValidateAsync(command);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Email);
-    }
-
-    [Theory]
-    [InlineData("invalid-email")]
-    [InlineData("invalid@")]
-    [InlineData("@invalid.com")]
-    public async Task Validate_InvalidEmail_ShouldHaveError(string email)
-    {
-        // Arrange
-        var command = new LockUserCommand { Email = email };
-
-        // Act
-        var result = await _validator.TestValidateAsync(command);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Email);
+        result.ShouldHaveValidationErrorFor(x => x.UserId);
     }
 
     [Fact]
-    public async Task Validate_ValidEmail_ShouldNotHaveError()
+    public async Task Validate_NullId_ShouldHaveError()
     {
         // Arrange
-        var command = new LockUserCommand { Email = "test@example.com" };
+        var command = new LockUserCommand();
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.UserId);
+    }
+
+    [Fact]
+    public async Task Validate_LongerThan200Id_ShouldHaveError()
+    {
+        // Arrange
+        var command = new LockUserCommand { UserId = new string('a', 201) };
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.UserId);
+    }
+
+    [Fact]
+    public async Task Validate_ValidUserId_ShouldNotHaveError()
+    {
+        // Arrange
+        var command = new LockUserCommand { UserId = "test@example.com" };
 
         // Act
         var result = await _validator.TestValidateAsync(command);
 
         // Assert
-        result.ShouldNotHaveValidationErrorFor(x => x.Email);
+        result.ShouldNotHaveValidationErrorFor(x => x.UserId);
     }
 
     [Theory]

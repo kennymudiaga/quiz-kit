@@ -7,10 +7,9 @@ public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
 {
     public LockUserCommandValidator()
     {
-        RuleFor(x => x.Email)
+        RuleFor(x => x.UserId)
             .NotEmpty()
-            .EmailAddress()
-            .WithMessage("A valid email address is required");
+            .MaximumLength(36);
 
         RuleFor(x => x.Reason)
             .NotEmpty()
@@ -19,7 +18,6 @@ public class LockUserCommandValidator : AbstractValidator<LockUserCommand>
             .WithMessage("A reason between 5 and 200 characters is required");
 
         RuleFor(x => x.LockoutExpiry)
-            .Must(x => !x.HasValue || x.Value >= DateTime.UtcNow)
-            .WithMessage("Lockout expiry must be in the future.");
+            .GreaterThanOrEqualTo(DateTime.UtcNow).WithMessage("Lockout expiry must be in the future.");
     }
 }

@@ -129,4 +129,17 @@ public class UserController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(query);
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Lock a user account
+    /// </summary>
+    /// <param name="command">Lock user command details</param>
+    /// <returns>Success or error result</returns>
+    [HttpPost("lock")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> Lock([FromBody] LockUserCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
 }
