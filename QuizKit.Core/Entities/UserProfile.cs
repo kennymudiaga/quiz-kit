@@ -115,4 +115,9 @@ public record UserProfile : IdEntity
         LockoutReason = lockoutReason;
     }
 
+    public void EndLockout()
+    {
+        LockoutExpiry = null;
+        LockoutReason = null;
+    }
 }

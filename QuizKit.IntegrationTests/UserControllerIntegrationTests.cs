@@ -658,7 +658,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     }
 
     [Fact]
-    public async Task Lock_WithNonExistentUser_ReturnsNotFound()
+    public async Task Lock_WithNonExistentUser_ReturnsBadRequest()
     {
         // Arrange
         // Login as admin
@@ -673,6 +673,104 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         // Act
         var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unlock_WithValidCommand_ReturnsSuccess()
+    {
+        // Arrange
+        var signUpCommand = new SignUpCommand
+        {
+            Email = $"unlock.test.{Guid.NewGuid()}@example.com",
+            Password = "P@ssw0rd123",
+            ConfirmPassword = "P@ssw0rd123",
+            FirstName = "Unlock",
+            LastName = "Test",
+            PhoneNumber = "+1234567890"
+        };
+        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        Assert.True(signUpResponse.IsSuccessStatusCode, 
+            $"Failed to create test user. Status: {signUpResponse.StatusCode}");
+        
+        var signedUpUser = JsonSerializer.Deserialize<LoggedInUserModel>(
+            await signUpResponse.Content.ReadAsStringAsync(),
+            _jsonOptions
+        );
+        Assert.NotNull(signedUpUser);
+
+        // Login as admin and lock the user
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        var lockCommand = new LockUserCommand
+        {
+            UserId = signedUpUser.Id!,
+            Reason = "Integration test lock",
+            LockoutExpiry = DateTime.UtcNow.AddDays(7)
+        };
+        var lockResponse = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+        Assert.Equal(HttpStatusCode.NoContent, lockResponse.StatusCode);
+
+        // Verify user is locked
+        var loginCommand = new LoginCommand
+        {
+            Email = signUpCommand.Email,
+            Password = signUpCommand.Password
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        Assert.Equal(HttpStatusCode.BadRequest, loginResponse.StatusCode);
+
+        // Now unlock the user
+        var unlockCommand = new UnlockUserCommand
+        {
+            UserId = signedUpUser.Id!,
+            Reason = "Integration test unlock"
+        };
+        var unlockResponse = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
+        Assert.Equal(HttpStatusCode.NoContent, unlockResponse.StatusCode);
+
+        // Verify user can log in again
+        loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unlock_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange
+        // Login as regular user
+        await _client.LoginAsync(LoginTestUserBehavior.basicUserEmail, "StrongPassword123!");
+
+        var unlockCommand = new UnlockUserCommand
+        {
+            UserId = Guid.NewGuid().ToString(),
+            Reason = "Integration test unlock"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Unlock_WithNonExistentUser_ReturnsBadRequest()
+    {
+        // Arrange
+        // Login as admin
+        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+
+        var unlockCommand = new UnlockUserCommand
+        {
+            UserId = Guid.NewGuid().ToString(),
+            Reason = "Integration test unlock"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

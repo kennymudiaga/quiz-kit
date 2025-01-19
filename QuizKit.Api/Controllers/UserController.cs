@@ -142,4 +142,15 @@ public class UserController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(command);
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Unlock a user account
+    /// </summary>
+    [HttpPost("unlock")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> Unlock([FromBody] UnlockUserCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
 }

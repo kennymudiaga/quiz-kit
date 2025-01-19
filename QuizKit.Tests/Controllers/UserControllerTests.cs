@@ -367,7 +367,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task Lock_WithNonExistentUser_ReturnsNotFound()
+    public async Task Lock_WithNonExistentUser_ReturnsBadRequest()
     {
         // Arrange
         var command = new LockUserCommand
@@ -376,13 +376,69 @@ public class UserControllerTests
             Reason = "Suspicious activity"
         };
         _mockMediator.Setup(x => x.Send(command, default))
-            .ReturnsAsync(new Failure("User not found", ResultStatus.NotFound));
+            .ReturnsAsync(Result.BadRequest("User not found."));
 
         // Act
         var result = await _controller.Lock(command);
 
         // Assert
-        var notFoundResult = Assert.IsType<NotFoundResult>(result);
-        Assert.Equal(StatusCodes.Status404NotFound, notFoundResult.StatusCode);
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Unlock_WithValidCommand_ReturnsNoContent()
+    {
+        // Arrange
+        var command = new UnlockUserCommand
+        {
+            UserId = "test@example.com",
+            Reason = "Account verified"
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.Unlock(command);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Unlock_WithInvalidCommand_ReturnsBadRequest()
+    {
+        // Arrange
+        var command = new UnlockUserCommand
+        {
+            UserId = "test@example.com",
+            Reason = "Account verified"
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(new Failure("Invalid command", ResultStatus.BadRequest));
+
+        // Act
+        var result = await _controller.Unlock(command);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Unlock_WithNonExistentUser_ReturnsBadRequest()
+    {
+        // Arrange
+        var command = new UnlockUserCommand
+        {
+            UserId = "nonexistent@example.com",
+            Reason = "Account verified"
+        };
+        _mockMediator.Setup(x => x.Send(command, default))
+            .ReturnsAsync(Result.BadRequest("User not found."));
+
+        // Act
+        var result = await _controller.Unlock(command);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 }
