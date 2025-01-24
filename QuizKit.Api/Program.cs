@@ -61,7 +61,8 @@ public class Program
         builder.Services.AddJwtProvider(builder.Configuration.GetSection("JWT").Get<JwtInfo>());
         builder.Services.AddAuthorizationBuilder()
             .AddDefaultPolicy(Policies.Default, policy => policy.RequireAuthenticatedUser())
-            .AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin))
+            .AddPolicy(Policies.SuperAdmin, policy => policy.RequireRole(Roles.SuperUser))
+            .AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin, Roles.SuperUser))
             .AddPolicy(Policies.User, policy => policy.RequireRole(Roles.User));
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -19,15 +19,17 @@ public class LoginTestUserBehavior(
           IPipelineBehavior<LoginCommand, Result<LoggedInUserModel>>
 
 {
-    public const string adminUserEmail = "admin-user@quizkit.com";
-    public const string basicUserEmail = "basic-user@spacecredit.com";
+    public const string SuperUserEmail = "super-user@quizkit.com";
+    public const string AdminUserEmail = "admin-user@quizkit.com";
+    public const string BasicUserEmail = "basic-user@spacecredit.com";
 
     public async Task<Result<LoggedInUserModel>> Handle(LoginCommand request, RequestHandlerDelegate<Result<LoggedInUserModel>> next, CancellationToken cancellationToken)
     {
         var testUser = request.Email switch
         {
-            adminUserEmail => AdminUser,
-            basicUserEmail => BasicUser,
+            SuperUserEmail => SuperUser,
+            AdminUserEmail => AdminUser,
+            BasicUserEmail => BasicUser,
             _ => default,
         };
 
@@ -39,9 +41,11 @@ public class LoginTestUserBehavior(
         return Result.Success(await CreateLogin(testUser));
     }
 
-    private static UserProfile AdminUser => CreateTestUser(adminUserEmail, "Admin", "Tester", Roles.Admin);
+    private static UserProfile SuperUser => CreateTestUser(SuperUserEmail, "Super", "Tester", Roles.SuperUser);
 
-    private static UserProfile BasicUser => CreateTestUser(basicUserEmail, "Basic", "Tester", Roles.User);
+    private static UserProfile AdminUser => CreateTestUser(AdminUserEmail, "Admin", "Tester", Roles.Admin);
+
+    private static UserProfile BasicUser => CreateTestUser(BasicUserEmail, "Basic", "Tester", Roles.User);
 
     private static UserProfile CreateTestUser(string email, string firstName, string lastName, string role)
     {

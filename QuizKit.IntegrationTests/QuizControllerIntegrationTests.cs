@@ -5,7 +5,6 @@ using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
 using QuizKit.Common.Results;
-using QuizKit.Core.Entities;
 using Xunit;
 
 namespace QuizKit.IntegrationTests;
@@ -29,7 +28,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var command = new CreateQuizCommand
         {
@@ -54,7 +53,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     public async Task Create_WithNonExistentOrganizationId_ReturnsBadRequest()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var command = new CreateQuizCommand
         {
@@ -78,7 +77,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as basic user
-        await _client.LoginAsync(LoginTestUserBehavior.basicUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
 
         var command = new CreateQuizCommand
         {
@@ -99,7 +98,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
         // Create some test quizzes
         var marker = "Test_Quiz_" + Guid.NewGuid().ToString();
         for (int i = 0; i < 3; i++)
@@ -149,7 +148,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
         // Create some test quizzes
         var marker = "Test_Quiz_" + Guid.NewGuid().ToString();
         for (int i = 0; i < 3; i++)
@@ -180,7 +179,7 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
         // Create some test quizzes
         var marker = "Test_Quiz_" + Guid.NewGuid().ToString();
         for (int i = 0; i < 3; i++)

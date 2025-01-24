@@ -7,9 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Queries\**" />
+    <Compile Remove="RequestHandlers\Quizes\**" />
+    <EmbeddedResource Remove="Queries\**" />
+    <EmbeddedResource Remove="RequestHandlers\Quizes\**" />
+    <None Remove="Queries\**" />
+    <None Remove="RequestHandlers\Quizes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Behaviours\" />
-    <Folder Include="RequestHandlers\Quizes\" />
-    <Folder Include="Queries\" />
   </ItemGroup>
 
   <ItemGroup>

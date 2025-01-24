@@ -491,7 +491,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
         var searchResponse = await _client.GetAsync("/user/search?page=1&pageSize=10");
@@ -532,7 +532,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
         var searchResponse = await _client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}&page=1&pageSize=10");
@@ -569,7 +569,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
         var searchResponse = await _client.GetAsync("/user/search?page=2&pageSize=10");
@@ -611,7 +611,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         Assert.NotNull(signedUpUser);
 
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -641,7 +641,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as regular user
-        await _client.LoginAsync(LoginTestUserBehavior.basicUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -662,7 +662,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -702,7 +702,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         Assert.NotNull(signedUpUser);
 
         // Login as admin and lock the user
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -741,7 +741,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as regular user
-        await _client.LoginAsync(LoginTestUserBehavior.basicUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
 
         var unlockCommand = new UnlockUserCommand
         {
@@ -761,7 +761,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.adminUserEmail, "StrongPassword123!");
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var unlockCommand = new UnlockUserCommand
         {
