@@ -64,12 +64,13 @@ public class QuestionController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [SwaggerOperation(Summary = "Delete a question", Description = "Deletes an existing question")]
+    [SwaggerOperation(Summary = "Delete a question", Description = "Deletes a specific question by ID")]
     [SwaggerResponse(StatusCodes.Status204NoContent, "Question deleted successfully")]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Question not found", typeof(Result))]
     public async Task<IActionResult> Delete(string quizId, string id)
     {
-        // TODO: Implement DeleteQuestionCommand and handler
-        return NotFound(Result.NotFound());
+        var command = new DeleteQuestionCommand { QuizId = quizId, Id = id };
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
     }
 }

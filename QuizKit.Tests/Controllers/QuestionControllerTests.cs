@@ -391,4 +391,42 @@ public class QuestionControllerTests
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
+
+    [Fact]
+    public async Task Delete_WithValidIds_ReturnsNoContent()
+    {
+        // Arrange
+        var quizId = "test-quiz";
+        var questionId = "test-question";
+
+        _mediator.Setup(m => m.Send(
+            It.Is<DeleteQuestionCommand>(c => c.QuizId == quizId && c.Id == questionId),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _controller.Delete(quizId, questionId);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_WithNonExistentQuestion_ReturnsNotFound()
+    {
+        // Arrange
+        var quizId = "test-quiz";
+        var questionId = "non-existent";
+
+        _mediator.Setup(m => m.Send(
+            It.Is<DeleteQuestionCommand>(c => c.QuizId == quizId && c.Id == questionId),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.NotFound());
+
+        // Act
+        var result = await _controller.Delete(quizId, questionId);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 }
