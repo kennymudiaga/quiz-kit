@@ -19,10 +19,7 @@ public class UserControllerTests
     public UserControllerTests()
     {
         _mockMediator = new Mock<IMediator>();
-
-        _controller = new UserController(
-            _mockMediator.Object
-        );
+        _controller = new UserController(_mockMediator.Object);
     }
 
     [Fact]
@@ -31,11 +28,11 @@ public class UserControllerTests
         // Arrange
         var signUpCommand = new SignUpCommand();
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<SignUpCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<SignUpCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid signup details", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.SignUp(signUpCommand);
+        var result = await _controller.SignUp(signUpCommand, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -49,11 +46,11 @@ public class UserControllerTests
         // Arrange
         var loginCommand = new LoginCommand();
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<LoginCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid login credentials", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.Login(loginCommand);
+        var result = await _controller.Login(loginCommand, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -71,11 +68,11 @@ public class UserControllerTests
             NewPassword = "newPassword456"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.ChangePassword(changePasswordCommand);
+        var result = await _controller.ChangePassword(changePasswordCommand, default);
 
         // Assert
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -92,11 +89,11 @@ public class UserControllerTests
             NewPassword = "newPassword456"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid current password", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.ChangePassword(changePasswordCommand);
+        var result = await _controller.ChangePassword(changePasswordCommand, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -114,11 +111,11 @@ public class UserControllerTests
             NewPassword = "newPassword456"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Account is locked", ResultStatus.Forbidden));
 
         // Act
-        var result = await _controller.ChangePassword(changePasswordCommand);
+        var result = await _controller.ChangePassword(changePasswordCommand, default);
 
         // Assert
         Assert.IsType<ForbidResult>(result);
@@ -133,11 +130,11 @@ public class UserControllerTests
             Email = "user@example.com"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.RequestPasswordReset(resetCommand);
+        var result = await _controller.RequestPasswordReset(resetCommand, default);
 
         // Assert
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -153,11 +150,11 @@ public class UserControllerTests
             Email = "locked@example.com"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Account is locked", ResultStatus.Forbidden));
 
         // Act
-        var result = await _controller.RequestPasswordReset(resetCommand);
+        var result = await _controller.RequestPasswordReset(resetCommand, default);
 
         // Assert
         Assert.IsType<ForbidResult>(result);
@@ -172,11 +169,11 @@ public class UserControllerTests
             Email = "invalid-email"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<RequestPasswordResetCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid email format", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.RequestPasswordReset(resetCommand);
+        var result = await _controller.RequestPasswordReset(resetCommand, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -190,11 +187,11 @@ public class UserControllerTests
         // Arrange
         var setPasswordCommand = new SetPasswordCommand();
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid set password details", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.SetPassword(setPasswordCommand);
+        var result = await _controller.SetPassword(setPasswordCommand, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -214,11 +211,11 @@ public class UserControllerTests
             ConfirmPassword = "NewPassword123!"
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), default))
+            .Setup(m => m.Send(It.IsAny<SetPasswordCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.SetPassword(setPasswordCommand);
+        var result = await _controller.SetPassword(setPasswordCommand, default);
 
         // Assert
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -231,11 +228,11 @@ public class UserControllerTests
         // Arrange
         var email = "available@example.com";
         _mockMediator
-            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.CheckEmailAvailability(email);
+        var result = await _controller.CheckEmailAvailability(email, default);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -247,11 +244,11 @@ public class UserControllerTests
         // Arrange
         var email = "existing@example.com";
         _mockMediator
-            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
-            .ReturnsAsync(Result.BadRequest("Email is already in use"));
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Failure("Email is already in use", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.CheckEmailAvailability(email);
+        var result = await _controller.CheckEmailAvailability(email, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -265,11 +262,11 @@ public class UserControllerTests
         // Arrange
         var email = "invalid-email";
         _mockMediator
-            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), default))
-            .ReturnsAsync(Result.BadRequest("Please provide a valid email address"));
+            .Setup(m => m.Send(It.Is<EmailAvailableQuery>(q => q.Email == email), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Failure("Please provide a valid email address", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.CheckEmailAvailability(email);
+        var result = await _controller.CheckEmailAvailability(email, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -293,11 +290,11 @@ public class UserControllerTests
             TotalCount = 1
         };
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
+            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(pagedList));
 
         // Act
-        var result = await _controller.SearchUsers("john", 1, 20);
+        var result = await _controller.SearchUsers("john", 1, 20, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -314,11 +311,11 @@ public class UserControllerTests
     {
         // Arrange
         _mockMediator
-            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), default))
-            .ReturnsAsync(() => new Result<PagedList<UserViewModel>> { Message = "Invalid pagination parameters", Status = ResultStatus.BadRequest });
+            .Setup(m => m.Send(It.IsAny<SearchUsersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Failure("Invalid pagination parameters", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.SearchUsers(null, page, pageSize);
+        var result = await _controller.SearchUsers(null, page, pageSize, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -335,11 +332,11 @@ public class UserControllerTests
             Reason = "Suspicious activity",
             LockoutExpiry = DateTime.UtcNow.AddDays(7)
         };
-        _mockMediator.Setup(x => x.Send(command, default))
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.Lock(command);
+        var result = await _controller.Lock(command, default);
 
         // Assert
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -355,11 +352,11 @@ public class UserControllerTests
             UserId = "test@example.com",
             Reason = "Suspicious activity"
         };
-        _mockMediator.Setup(x => x.Send(command, default))
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid command", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.Lock(command);
+        var result = await _controller.Lock(command, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -375,11 +372,11 @@ public class UserControllerTests
             UserId = "nonexistent@example.com",
             Reason = "Suspicious activity"
         };
-        _mockMediator.Setup(x => x.Send(command, default))
-            .ReturnsAsync(Result.BadRequest("User not found."));
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Failure("User not found.", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.Lock(command);
+        var result = await _controller.Lock(command, default);
 
         // Assert
         Assert.IsType<BadRequestObjectResult>(result);
@@ -394,11 +391,11 @@ public class UserControllerTests
             UserId = "test@example.com",
             Reason = "Account verified"
         };
-        _mockMediator.Setup(x => x.Send(command, default))
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.Unlock(command);
+        var result = await _controller.Unlock(command, default);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -413,11 +410,11 @@ public class UserControllerTests
             UserId = "test@example.com",
             Reason = "Account verified"
         };
-        _mockMediator.Setup(x => x.Send(command, default))
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Failure("Invalid command", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.Unlock(command);
+        var result = await _controller.Unlock(command, default);
 
         // Assert
         Assert.IsType<BadRequestObjectResult>(result);
@@ -432,11 +429,11 @@ public class UserControllerTests
             UserId = "nonexistent@example.com",
             Reason = "Account verified"
         };
-        _mockMediator.Setup(x => x.Send(command, default))
-            .ReturnsAsync(Result.BadRequest("User not found."));
+        _mockMediator.Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Failure("User not found.", ResultStatus.BadRequest));
 
         // Act
-        var result = await _controller.Unlock(command);
+        var result = await _controller.Unlock(command, default);
 
         // Assert
         Assert.IsType<BadRequestObjectResult>(result);
