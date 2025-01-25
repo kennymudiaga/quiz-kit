@@ -268,4 +268,69 @@ public class QuestionControllerTests
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
+
+    [Fact]
+    public async Task GetQuestions_WithValidQuizId_ReturnsOk()
+    {
+        // Arrange
+        var quizId = "test-quiz";
+        var expectedQuestions = new List<QuestionModel>
+        {
+            new()
+            {
+                Id = "1",
+                QuizId = quizId,
+                QuestionText = "Question 1",
+                A = "A1",
+                B = "B1",
+                C = "C1",
+                D = "D1",
+                Answer = "A"
+            },
+            new()
+            {
+                Id = "2",
+                QuizId = quizId,
+                QuestionText = "Question 2",
+                A = "A2",
+                B = "B2",
+                C = "C2",
+                D = "D2",
+                Answer = "B"
+            }
+        };
+
+        _mediator.Setup(m => m.Send(
+            It.Is<GetQuestionsQuery>(q => q.QuizId == quizId),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(expectedQuestions));
+
+        // Act
+        var result = await _controller.GetQuestions(quizId);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var questions = Assert.IsType<List<QuestionModel>>(okResult.Value);
+        Assert.Equal(expectedQuestions.Count, questions.Count);
+        Assert.Equal(expectedQuestions[0].QuestionText, questions[0].QuestionText);
+        Assert.Equal(expectedQuestions[1].QuestionText, questions[1].QuestionText);
+    }
+
+    [Fact]
+    public async Task GetQuestions_WithNonExistentQuiz_ReturnsNotFound()
+    {
+        // Arrange
+        var quizId = "non-existent-quiz";
+
+        _mediator.Setup(m => m.Send(
+            It.Is<GetQuestionsQuery>(q => q.QuizId == quizId),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.NotFound("Quiz not found."));
+
+        // Act
+        var result = await _controller.GetQuestions(quizId);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 }

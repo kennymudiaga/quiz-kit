@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Questions;
 using QuizKit.Common.Requests.Quizzes;
-using QuizKit.Common.Results;
 using QuizKit.Core.Data;
 using Xunit;
 
@@ -231,5 +230,81 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetQuestions_WithValidQuizId_ReturnsSuccess()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create a quiz first
+        var createQuizCommand = new CreateQuizCommand
+        {
+            Title = "Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true
+        };
+
+        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
+        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(quiz);
+
+        // Create questions
+        var questions = new[]
+        {
+            new CreateQuestionCommand
+            {
+                QuizId = quiz.Id!,
+                QuestionText = "Question 1",
+                A = "A1",
+                B = "B1",
+                C = "C1",
+                D = "D1",
+                Answer = "A"
+            },
+            new CreateQuestionCommand
+            {
+                QuizId = quiz.Id!,
+                QuestionText = "Question 2",
+                A = "A2",
+                B = "B2",
+                C = "C2",
+                D = "D2",
+                Answer = "B"
+            }
+        };
+
+        foreach (var question in questions)
+        {
+            var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", question);
+            Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+        }
+
+        // Act
+        var response = await _client.GetAsync($"/quiz/{quiz.Id}/question");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<List<QuestionModel>>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.Equal(questions[0].QuestionText, result[0].QuestionText);
+        Assert.Equal(questions[1].QuestionText, result[1].QuestionText);
+    }
+
+    [Fact]
+    public async Task GetQuestions_WithNonExistentQuiz_ReturnsNotFound()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Act
+        var response = await _client.GetAsync("/quiz/non-existent-quiz/question");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

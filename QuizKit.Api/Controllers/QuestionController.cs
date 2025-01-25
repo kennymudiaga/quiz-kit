@@ -18,13 +18,14 @@ public class QuestionController(IMediator mediator) : ControllerBase
     private readonly IMediator _mediator = mediator;
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Get questions for a quiz", Description = "Retrieves all questions for the specified quiz")]
-    [SwaggerResponse(StatusCodes.Status200OK, "Questions retrieved successfully", typeof(IEnumerable<QuestionModel>))]
+    [SwaggerOperation(Summary = "Get all questions for a quiz", Description = "Returns all questions for the specified quiz")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Questions retrieved successfully", typeof(List<QuestionModel>))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
     public async Task<IActionResult> GetQuestions(string quizId)
     {
-        // TODO: Implement GetQuestionsQuery and handler
-        return Ok(Array.Empty<QuestionModel>());
+        var query = new GetQuestionsQuery { QuizId = quizId };
+        var result = await _mediator.Send(query);
+        return result.ToActionResult();
     }
 
     [HttpGet("{id}")]
