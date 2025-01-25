@@ -383,4 +383,48 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_WithValidId_ReturnsQuiz()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = "Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        // Act
+        var response = await _client.GetAsync($"/quiz/{createResult.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(createCommand.Title, result.Title);
+        Assert.Equal(createCommand.Description, result.Description);
+        Assert.Equal(createCommand.TimeLimit, result.TimeLimit);
+        Assert.Equal(createCommand.RandomizeQuestions, result.RandomizeQuestions);
+        Assert.Equal(createCommand.ShowAnswers, result.ShowAnswers);
+    }
+
+    [Fact]
+    public async Task Get_WithNonExistentId_ReturnsNotFound()
+    {
+        // Act
+        var response = await _client.GetAsync("/quiz/non-existent-id");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

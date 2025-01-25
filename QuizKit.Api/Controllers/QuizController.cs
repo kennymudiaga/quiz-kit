@@ -60,6 +60,17 @@ public class QuizController(IMediator mediator) : ControllerBase
         return result.ToActionResult();
     }
 
+    [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "Get a quiz by ID", Description = "Retrieves a specific quiz by its ID")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz retrieved successfully", typeof(QuizModel))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
+    public async Task<IActionResult> Get(string id)
+    {
+        var query = new GetQuizQuery { Id = id };
+        var result = await _mediator.Send(query);
+        return result.ToActionResult();
+    }
+
     [HttpPut("{id}")]
     [Authorize(Policies.Admin)]
     [SwaggerOperation(Summary = "Update an existing quiz", Description = "Updates an existing quiz with the specified details")]
