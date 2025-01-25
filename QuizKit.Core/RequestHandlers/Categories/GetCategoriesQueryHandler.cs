@@ -20,10 +20,10 @@ public class GetCategoriesQueryHandler(QuizDbContext context, IMapper mapper) : 
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchTerm = request.SearchTerm.ToLower();
+            var pattern = $"%{request.SearchTerm}%";
             query = query.Where(c => 
-                c.Id!.ToLower().Contains(searchTerm) || 
-                (c.Description != null && c.Description.ToLower().Contains(searchTerm)));
+                EF.Functions.Like(c.Id, pattern) || 
+                (c.Description != null && EF.Functions.Like(c.Description, pattern)));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
