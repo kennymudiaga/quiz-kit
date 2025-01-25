@@ -8,7 +8,8 @@ public class QuizQuestionConfig : IEntityTypeConfiguration<QuizQuestion>
 {
     public void Configure(EntityTypeBuilder<QuizQuestion> builder)
     {
-        builder.HasKey(x => new { x.Id, x.QuizId });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasMaxLength(36);
         builder.Property(x => x.QuizId).HasMaxLength(36);
         builder.Property(x => x.QuestionText).HasMaxLength(250);
         builder.Property(x => x.Answer).HasMaxLength(1);

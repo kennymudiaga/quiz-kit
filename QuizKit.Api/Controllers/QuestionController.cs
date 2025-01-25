@@ -54,10 +54,11 @@ public class QuestionController(IMediator mediator) : ControllerBase
     [SwaggerResponse(StatusCodes.Status200OK, "Question updated successfully", typeof(QuestionModel))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid question data", typeof(Result))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Question not found", typeof(Result))]
-    public async Task<IActionResult> Update(string quizId, string id)
+    public async Task<IActionResult> Update(string quizId, string id, [FromBody] UpdateQuestionCommand command)
     {
-        // TODO: Implement UpdateQuestionCommand and handler
-        return NotFound(Result.NotFound("Question not found."));
+        command = command with { QuizId = quizId, Id = id };
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
     }
 
     [HttpDelete("{id}")]

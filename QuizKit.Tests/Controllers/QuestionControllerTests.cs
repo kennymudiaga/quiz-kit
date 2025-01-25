@@ -35,7 +35,7 @@ public class QuestionControllerTests
 
         var expectedModel = new QuestionModel
         {
-            Id = 1,
+            Id = "1",
             QuizId = quizId,
             QuestionText = command.QuestionText,
             A = command.A,

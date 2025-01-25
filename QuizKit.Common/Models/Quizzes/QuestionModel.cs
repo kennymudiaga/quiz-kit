@@ -2,7 +2,7 @@
 
 public record QuestionModel
 {
-    public int Id { get; init; }
+    public string Id { get; init; } = "";
     public string? QuizId { get; init; }
     public string? QuestionText { get; init; }
     public string? A { get; init; }

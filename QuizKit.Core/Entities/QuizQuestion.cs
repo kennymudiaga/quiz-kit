@@ -1,8 +1,7 @@
 ﻿namespace QuizKit.Core.Entities;
 
-public record QuizQuestion
+public record QuizQuestion : IdEntity
 {
-    public int Id { get; set; }
     public string? QuizId { get; set; }
     public string? QuestionText { get; set; }
     public string? A { get; set; }
