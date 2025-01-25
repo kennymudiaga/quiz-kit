@@ -45,4 +45,18 @@ public record Quiz : IdEntity
     {
         _questions.Add(question);
     }
+
+    public void Update(UpdateQuizCommand command)
+    {
+        Title = command.Title;
+        Description = command.Description;
+        OrganizationId = command.OrganizationId;
+        TimeLimit = command.TimeLimit;
+        RandomizeQuestions = command.RandomizeQuestions;
+        ShowAnswers = command.ShowAnswers;
+        CategoryId = command.CategoryId;
+        ImageUrl = command.ImageUrl;
+        StartDate = command.StartDate;
+        EndDate = command.EndDate;
+    }
 }

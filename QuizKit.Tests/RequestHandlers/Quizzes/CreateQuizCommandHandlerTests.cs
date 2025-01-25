@@ -25,7 +25,7 @@ public class CreateQuizCommandHandlerTests : IDisposable
     public async Task Handle_WithValidCommand_CreatesQuiz()
     {
         // Arrange
-        var organization = new Organization { Name = "Test Org" };
+        var organization = new Organization { Name = "Test Org", Email = "mail@quizkit.com" };
         _context.Organizations.Add(organization);
         await _context.SaveChangesAsync();
 

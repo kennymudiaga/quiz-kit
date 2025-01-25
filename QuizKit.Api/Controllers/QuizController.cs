@@ -59,4 +59,23 @@ public class QuizController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(query);
         return result.ToActionResult();
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Policies.Admin)]
+    [SwaggerOperation(Summary = "Update an existing quiz", Description = "Updates an existing quiz with the specified details")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz updated successfully", typeof(Result<QuizModel>))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid quiz details provided", typeof(Result))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
+    public async Task<IActionResult> Update(string id, UpdateQuizCommand command)
+    {
+        if (id != command.Id)
+        {
+            return Result.BadRequest("ID in URL must match ID in request body.").ToActionResult();
+        }
+
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
 }

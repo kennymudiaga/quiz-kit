@@ -39,7 +39,8 @@ public class SendInvitationCommandHandlerTests
         var organization = new Core.Entities.Organization
         {
             Id = organizationId,
-            Name = "Test Org"
+            Name = "Test Org",
+            Email = "mail@quizkit.com",
         };
         _dbContext.Organizations.Add(organization);
         await _dbContext.SaveChangesAsync();
@@ -109,7 +110,8 @@ public class SendInvitationCommandHandlerTests
         var organization = new QuizKit.Core.Entities.Organization
         {
             Id = organizationId,
-            Name = "Test Org"
+            Name = "Test Org",
+            Email = "testorg@mail.com",
         };
         _dbContext.Organizations.Add(organization);
 
@@ -153,7 +155,8 @@ public class SendInvitationCommandHandlerTests
         var organization = new QuizKit.Core.Entities.Organization
         {
             Id = organizationId,
-            Name = "Test Org"
+            Name = "Test Org",
+            Email = "testorg@mail.com"
         };
         _dbContext.Organizations.Add(organization);
 

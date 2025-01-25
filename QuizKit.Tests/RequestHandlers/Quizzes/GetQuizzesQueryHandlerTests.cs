@@ -94,8 +94,8 @@ public class GetQuizzesQueryHandlerTests
     {
         var organizations = new List<Organization>
         {
-            new() { Id = "org1", Name = "Organization 1" },
-            new() { Id = "org2", Name = "Organization 2" }
+            new() { Id = "org1", Name = "Organization 1", Email = "mail@quizkit.com" },
+            new() { Id = "org2", Name = "Organization 2", Email = "mail2@quizkit.com" }
         };
 
         var categories = new List<Category>
