@@ -18,7 +18,7 @@ public class UpdateQuizCommandHandler(QuizDbContext context) : IRequestHandler<U
 
         if (quiz == null)
         {
-            return Result.NotFound("Quiz not found.");
+            return Result.NotFound();
         }
 
         if (!string.IsNullOrEmpty(request.OrganizationId) && request.OrganizationId != quiz.OrganizationId)

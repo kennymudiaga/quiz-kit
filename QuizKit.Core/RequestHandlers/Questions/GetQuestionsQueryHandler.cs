@@ -20,7 +20,7 @@ public class GetQuestionsQueryHandler(QuizDbContext context, IMapper mapper) : I
 
         if (quiz == null)
         {
-            return Result.NotFound("Quiz not found.");
+            return Result.NotFound();
         }
 
         var questions = await _context.QuizQuestions

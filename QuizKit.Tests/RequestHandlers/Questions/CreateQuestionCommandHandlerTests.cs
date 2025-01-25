@@ -100,7 +100,7 @@ public class CreateQuestionCommandHandlerTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Quiz not found.", result.Message);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
     }
 
     public void Dispose()

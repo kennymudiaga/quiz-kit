@@ -116,7 +116,7 @@ public class QuestionControllerTests
         _mediator.Setup(m => m.Send(
             It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.NotFound("Quiz not found."));
+            .ReturnsAsync(Result.NotFound());
 
         // Act
         var result = await _controller.Create(quizId, command);
@@ -144,7 +144,7 @@ public class QuestionControllerTests
         _mediator.Setup(m => m.Send(
             It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.NotFound("Quiz not found."));
+            .ReturnsAsync(Result.NotFound());
 
         // Act
         var result = await _controller.Create(quizId, command);
@@ -260,7 +260,7 @@ public class QuestionControllerTests
         };
 
         _mediator.Setup(m => m.Send(It.IsAny<UpdateQuestionCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.NotFound("Question not found."));
+            .ReturnsAsync(Result.NotFound());
 
         // Act
         var result = await _controller.Update(quizId, questionId, command);
@@ -325,7 +325,7 @@ public class QuestionControllerTests
         _mediator.Setup(m => m.Send(
             It.Is<GetQuestionsQuery>(q => q.QuizId == quizId),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.NotFound("Quiz not found."));
+            .ReturnsAsync(Result.NotFound());
 
         // Act
         var result = await _controller.GetQuestions(quizId);

@@ -115,7 +115,7 @@ public class UpdateQuestionCommandHandlerTests : IDisposable
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.Equal("Question not found.", result.Message);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
     }
 
     public void Dispose()

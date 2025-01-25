@@ -35,7 +35,7 @@ public class QuestionController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Get(string quizId, string id)
     {
         // TODO: Implement GetQuestionQuery and handler
-        return NotFound(Result.NotFound("Question not found."));
+        return NotFound(Result.NotFound());
     }
 
     [HttpPost]
@@ -69,6 +69,6 @@ public class QuestionController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Delete(string quizId, string id)
     {
         // TODO: Implement DeleteQuestionCommand and handler
-        return NotFound(Result.NotFound("Question not found."));
+        return NotFound(Result.NotFound());
     }
 }

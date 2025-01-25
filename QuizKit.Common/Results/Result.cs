@@ -8,20 +8,22 @@ public record Result
     public Dictionary<string, List<string>>? Errors { get; set; }
     [JsonIgnore]
     public ResultStatus? Status { get; set; }
-    public bool IsSuccess => Status == ResultStatus.Success;
+    public bool IsSuccess => Status == ResultStatus.OK;
     [JsonIgnore]
     public bool IsFailure => !IsSuccess;
    
 
 
-    public static Result Success() => new() { Status = ResultStatus.Success };
+    public static Result Success() => new() { Status = ResultStatus.OK };
 
-    public static Result<T> Success<T>(T value) => new() { Status = ResultStatus.Success, Data = value };
+    public static Result<T> Success<T>(T value) => new() { Status = ResultStatus.OK, Data = value };
+
+    public static Result<T> Created<T>(T value) => new() { Status = ResultStatus.Created, Data = value };
 
     public static PagedResult<T> Page<T>(List<T> value, int page, int pageSize, int totalCount)
         => new()
         {
-            Status = ResultStatus.Success,
+            Status = ResultStatus.OK,
             Data = value,
             Page = page,
             PageSize = pageSize,
@@ -39,9 +41,9 @@ public record Result
             Errors = errors,
         };
 
-    public static Failure NotFound(string? error = null) => new(error, ResultStatus.NotFound);
-    public static Failure Unauthorized(string? error = null) => new(error, ResultStatus.Unauthorized);
-    public static Failure Forbidden(string? error = null) => new(error, ResultStatus.Forbidden);
+    public static Failure NotFound() => new(ResultStatus.NotFound);
+    public static Failure Unauthorized() => new(ResultStatus.Unauthorized);
+    public static Failure Forbidden() => new(ResultStatus.Forbidden);
 
     public Result<TOut> ToResult<TOut>() => new()
     {

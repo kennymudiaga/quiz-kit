@@ -17,7 +17,7 @@ public class DeleteQuizCommandHandler(QuizDbContext context) : IRequestHandler<D
 
         if (quiz == null)
         {
-            return Result.NotFound("Quiz not found.");
+            return Result.NotFound();
         }
 
         _context.Quizzes.Remove(quiz);

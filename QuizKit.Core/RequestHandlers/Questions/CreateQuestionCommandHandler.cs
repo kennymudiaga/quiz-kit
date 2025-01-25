@@ -21,7 +21,7 @@ public class CreateQuestionCommandHandler(QuizDbContext context, IMapper mapper)
 
         if (quiz == null)
         {
-            return Result.NotFound("Quiz not found.");
+            return Result.NotFound();
         }
 
         var question = new QuizQuestion

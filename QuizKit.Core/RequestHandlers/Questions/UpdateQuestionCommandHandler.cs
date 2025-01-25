@@ -20,7 +20,7 @@ public class UpdateQuestionCommandHandler(QuizDbContext context, IMapper mapper)
 
         if (question == null)
         {
-            return Result.NotFound("Question not found.");
+            return Result.NotFound();
         }
 
         question.QuestionText = request.QuestionText;

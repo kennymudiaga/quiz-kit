@@ -22,7 +22,7 @@ public class GetQuizQueryHandler(QuizDbContext context, IMapper mapper) : IReque
 
         if (quiz == null)
         {
-            return Result.NotFound("Quiz not found.");
+            return Result.NotFound();
         }
 
         var quizModel = _mapper.Map<QuizModel>(quiz);

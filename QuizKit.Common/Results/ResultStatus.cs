@@ -1,5 +1,8 @@
-﻿namespace QuizKit.Common.Results;
+﻿using System.Text.Json.Serialization;
 
+namespace QuizKit.Common.Results;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ResultStatus
 {
     Unknown,
@@ -8,5 +11,6 @@ public enum ResultStatus
     NotFound,
     Unauthorized,
     Forbidden,
-    Success,
+    OK,
+    Created,
 }
