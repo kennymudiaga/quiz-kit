@@ -329,4 +329,58 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
         Assert.NotNull(result);
         Assert.Equal("ID in URL must match ID in request body.", result.Message);
     }
+
+    [Fact]
+    public async Task Delete_WithValidId_ReturnsSuccess()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = "Test Quiz",
+            Description = "Test Description"
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        // Act
+        var deleteResponse = await _client.DeleteAsync($"/quiz/{createResult.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        // Verify quiz is deleted
+        var getResponse = await _client.GetAsync($"/quiz/{createResult.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_WithNonExistentQuiz_ReturnsNotFound()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Act
+        var response = await _client.DeleteAsync("/quiz/non-existent-id");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+
+        // Act
+        var response = await _client.DeleteAsync("/quiz/some-id");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
 }

@@ -78,4 +78,18 @@ public class QuizController(IMediator mediator) : ControllerBase
         var result = await _mediator.Send(command);
         return result.ToActionResult();
     }
+
+    [HttpDelete("{id}")]
+    [Authorize(Policies.Admin)]
+    [SwaggerOperation(Summary = "Delete a quiz", Description = "Deletes an existing quiz")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz deleted successfully", typeof(Result))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var command = new DeleteQuizCommand { Id = id };
+        var result = await _mediator.Send(command);
+        return result.ToActionResult();
+    }
 }
