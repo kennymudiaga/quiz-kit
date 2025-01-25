@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using QuizKit.Api.Controllers;
 using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
+using QuizKit.Common.Results;
 
 namespace QuizKit.Tests.Controllers;
 
@@ -36,16 +38,16 @@ public class QuizControllerTests
             OrganizationId = command.OrganizationId
         };
 
-        _mockMediator.Setup(m => m.Send(command, default))
+        _mockMediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(quizModel));
 
         // Act
-        var result = await _controller.Create(command);
+        var result = await _controller.Create(command, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<QuizModel>(okResult.Value);
-        Assert.Equal(quizModel.Id, returnValue!.Id);
+        Assert.Equal(quizModel.Id, returnValue.Id);
     }
 
     [Fact]
@@ -53,11 +55,11 @@ public class QuizControllerTests
     {
         // Arrange
         var command = new CreateQuizCommand();
-        _mockMediator.Setup(m => m.Send(command, default))
+        _mockMediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.BadRequest("Invalid command"));
 
         // Act
-        var result = await _controller.Create(command);
+        var result = await _controller.Create(command, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -97,7 +99,7 @@ public class QuizControllerTests
             q.CategoryId == query.CategoryId &&
             q.SearchTerm == query.SearchTerm &&
             q.Page == query.Page &&
-            q.PageSize == query.PageSize), default))
+            q.PageSize == query.PageSize), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(pagedList));
 
         // Act
@@ -106,12 +108,13 @@ public class QuizControllerTests
             query.CategoryId,
             query.SearchTerm,
             query.Page,
-            query.PageSize);
+            query.PageSize,
+            default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<PagedList<QuizModel>>(okResult.Value);
-        Assert.Equal(2, returnValue!.Items.Count);
+        Assert.Equal(2, returnValue.Items.Count);
         Assert.Equal(2, returnValue.TotalCount);
         Assert.Equal(1, returnValue.Page);
         Assert.Equal(10, returnValue.PageSize);
@@ -121,11 +124,11 @@ public class QuizControllerTests
     public async Task GetQuizzes_WithInvalidParameters_ReturnsBadRequest()
     {
         // Arrange
-        _mockMediator.Setup(m => m.Send(It.IsAny<GetQuizzesQuery>(), default))
+        _mockMediator.Setup(m => m.Send(It.IsAny<GetQuizzesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.BadRequest("Invalid parameters"));
 
         // Act
-        var result = await _controller.GetQuizzes(page: -1);
+        var result = await _controller.GetQuizzes(page: -1, cancellationToken: default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

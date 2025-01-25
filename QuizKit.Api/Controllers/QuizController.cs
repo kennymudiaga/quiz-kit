@@ -19,9 +19,14 @@ namespace QuizKit.Api.Controllers;
 /// <remarks>
 /// Provides endpoints for creating, retrieving, and managing quizzes
 /// </remarks>
-public class QuizController(IMediator mediator) : ControllerBase
+public class QuizController : ControllerBase
 {
-    private readonly IMediator _mediator = mediator;
+    private readonly IMediator _mediator;
+
+    public QuizController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
 
     [HttpPost]
     [Authorize(Policies.Admin)]
@@ -30,9 +35,9 @@ public class QuizController(IMediator mediator) : ControllerBase
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid quiz details provided", typeof(Result))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized to create quizzes")]
-    public async Task<IActionResult> Create([FromBody] CreateQuizCommand command)
+    public async Task<IActionResult> Create([FromBody] CreateQuizCommand command, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -45,7 +50,8 @@ public class QuizController(IMediator mediator) : ControllerBase
         [FromQuery] string? categoryId = null,
         [FromQuery] string? searchTerm = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
         var query = new GetQuizzesQuery
         {
@@ -56,7 +62,7 @@ public class QuizController(IMediator mediator) : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -64,10 +70,10 @@ public class QuizController(IMediator mediator) : ControllerBase
     [SwaggerOperation(Summary = "Get a quiz by ID", Description = "Retrieves a specific quiz by its ID")]
     [SwaggerResponse(StatusCodes.Status200OK, "Quiz retrieved successfully", typeof(QuizModel))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
-    public async Task<IActionResult> Get(string id)
+    public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
     {
         var query = new GetQuizQuery { Id = id };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -79,14 +85,14 @@ public class QuizController(IMediator mediator) : ControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
-    public async Task<IActionResult> Update(string id, UpdateQuizCommand command)
+    public async Task<IActionResult> Update(string id, UpdateQuizCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id)
         {
             return Result.BadRequest("ID in URL must match ID in request body.").ToActionResult();
         }
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -97,10 +103,10 @@ public class QuizController(IMediator mediator) : ControllerBase
     [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
         var command = new DeleteQuizCommand { Id = id };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
 }
