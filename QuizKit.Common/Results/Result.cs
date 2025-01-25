@@ -8,22 +8,29 @@ public record Result
     public Dictionary<string, List<string>>? Errors { get; set; }
     [JsonIgnore]
     public ResultStatus? Status { get; set; }
-    public bool IsSuccess => Status == ResultStatus.OK;
+
+    public bool IsSuccess => Status switch
+    {
+        ResultStatus.Okay => true,
+        ResultStatus.Created => true,
+        _ => false,
+    };
+
     [JsonIgnore]
     public bool IsFailure => !IsSuccess;
    
 
 
-    public static Result Success() => new() { Status = ResultStatus.OK };
+    public static Result Success() => new() { Status = ResultStatus.Okay };
 
-    public static Result<T> Success<T>(T value) => new() { Status = ResultStatus.OK, Data = value };
+    public static Result<T> Success<T>(T value) => new() { Status = ResultStatus.Okay, Data = value };
 
     public static Result<T> Created<T>(T value) => new() { Status = ResultStatus.Created, Data = value };
 
     public static PagedResult<T> Page<T>(List<T> value, int page, int pageSize, int totalCount)
         => new()
         {
-            Status = ResultStatus.OK,
+            Status = ResultStatus.Okay,
             Data = value,
             Page = page,
             PageSize = pageSize,

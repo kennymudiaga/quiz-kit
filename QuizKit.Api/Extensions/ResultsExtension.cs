@@ -9,7 +9,7 @@ public static class ResultExtensions
     {
         return result switch
         {
-            { Status: ResultStatus.Created } => new CreatedResult { Value = result },
+            { Status: ResultStatus.Created } => new CreatedResult("", result.Data),
             { IsSuccess: true } => new OkObjectResult(result.Data),
             _ => ToActionResult(result as Result),
         };

@@ -20,6 +20,7 @@ public record Quiz : IdEntity
         RandomizeQuestions = command.RandomizeQuestions;
         ShowAnswers = command.ShowAnswers;
         CreatedAt = DateTime.UtcNow;
+        CategoryId = command.CategoryId;
     }
 
     public string? Title { get; protected set; }

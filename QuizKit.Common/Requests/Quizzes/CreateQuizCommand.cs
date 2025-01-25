@@ -35,4 +35,9 @@ public class CreateQuizCommand : IRequest<Result<QuizModel>>
     /// The organization ID that this quiz belongs to
     /// </summary>
     public string? OrganizationId { get; set; }
+
+    /// <summary>
+    /// The category ID that this quiz belongs to
+    /// </summary>
+    public string? CategoryId { get; set; }
 }
