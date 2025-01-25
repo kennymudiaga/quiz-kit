@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QuizKit.Core.Entities;
 
 namespace QuizKit.Core.Data;
