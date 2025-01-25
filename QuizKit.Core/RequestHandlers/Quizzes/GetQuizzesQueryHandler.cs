@@ -33,9 +33,17 @@ public class GetQuizzesQueryHandler(QuizDbContext context, IMapper mapper)
             query = query.Where(q => q.CategoryId == request.CategoryId);
         }
 
+        if (request.Status.HasValue)
+        {
+            query = query.Where(q => q.Status == request.Status.Value);
+        }
+
         if (!string.IsNullOrEmpty(request.SearchTerm))
         {
-            query = query.Where(q => EF.Functions.Like(q.Title!, $"%{request.SearchTerm}%"));
+            var pattern = $"%{request.SearchTerm}%";
+            query = query.Where(q => 
+                EF.Functions.Like(q.Title!, pattern) || 
+                (q.Description != null && EF.Functions.Like(q.Description, pattern)));
         }
 
         var totalItems = await query.CountAsync(cancellationToken);
@@ -53,7 +61,7 @@ public class GetQuizzesQueryHandler(QuizDbContext context, IMapper mapper)
             Items = mappedItems,
             Page = request.Page,
             PageSize = request.PageSize,
-            TotalCount = totalItems,
+            TotalCount = totalItems
         };
 
         return Result.Success(pagedList);

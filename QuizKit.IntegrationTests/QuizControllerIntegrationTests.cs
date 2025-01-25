@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using QuizKit.Common.Enums;
 using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
 using QuizKit.Common.Results;
+using QuizKit.Core.Utils;
 using Xunit;
 
 namespace QuizKit.IntegrationTests;
@@ -223,6 +225,94 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
     }
 
     [Fact]
+    public async Task GetQuizzes_WithStatusFilter_ReturnsFilteredQuizzes()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create quizzes with different statuses
+        var quizzes = new[]
+        {
+            new CreateQuizCommand { Title = "Created Quiz", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) },
+            new CreateQuizCommand { Title = "Live Quiz 1", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) },
+            new CreateQuizCommand { Title = "Live Quiz 2", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) }
+        };
+
+        foreach (var quiz in quizzes)
+        {
+            var response = await _client.PostAsJsonAsync("/quiz", quiz);
+            var quizModel = await response.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+            Assert.NotNull(quizModel);
+
+            if (quiz.Title.StartsWith("Live"))
+            {
+                // Update status to Live for some quizzes
+                // Note: In a real app, there would be a proper endpoint to change status
+                var updateCommand = new UpdateQuizStatusCommand
+                {
+                    Id = quizModel.Id!,
+                    Status = QuizStatus.Live
+                };
+                await _client.PutAsJsonAsync($"/quiz/{quizModel.Id}/status", updateCommand);
+            }
+        }
+
+        // Act
+        var getResponse = await _client.GetAsync("/quiz?status=Live");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var result = await getResponse.Content.ReadFromJsonAsync<PagedList<QuizModel>>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.TotalCount);
+        Assert.All(result.Items, quiz => Assert.Equal(QuizStatus.Live, quiz.Status));
+    }
+
+    [Fact]
+    public async Task GetQuizzes_WithStatusAndSearchTerm_ReturnsCombinedFilteredQuizzes()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create quizzes with different statuses and titles
+        var quizzes = new[]
+        {
+            new CreateQuizCommand { Title = "Math Quiz Created", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) },
+            new CreateQuizCommand { Title = "Math Quiz Live", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) },
+            new CreateQuizCommand { Title = "History Quiz Live", Description = "Test Description", StartDate = DateTime.UtcNow.AddDays(1) }
+        };
+
+        foreach (var quiz in quizzes)
+        {
+            var response = await _client.PostAsJsonAsync("/quiz", quiz);
+            var quizModel = await response.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+            Assert.NotNull(quizModel);
+
+            if (quiz.Title.Contains("Live"))
+            {
+                var updateCommand = new UpdateQuizStatusCommand
+                {
+                    Id = quizModel.Id!,
+                    Status = QuizStatus.Live
+                };
+                await _client.PutAsJsonAsync($"/quiz/{quizModel.Id}/status", updateCommand);
+            }
+        }
+
+        // Act
+        var getResponse = await _client.GetAsync("/quiz?status=Live&searchTerm=Math");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var result = await getResponse.Content.ReadFromJsonAsync<PagedList<QuizModel>>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.TotalCount);
+        Assert.Single(result.Items);
+        Assert.Equal("Math Quiz Live", result.Items[0].Title);
+        Assert.Equal(QuizStatus.Live, result.Items[0].Status);
+    }
+
+    [Fact]
     public async Task Update_WithValidCommand_ReturnsSuccess()
     {
         // Arrange
@@ -426,5 +516,148 @@ public class QuizControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_WithoutAdminUser_ReturnsForbidden()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = $"{IdGenerator.GenerateId(8)} Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true,
+            StartDate = DateTime.UtcNow.AddDays(1)
+        };
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+
+        var command = new UpdateQuizStatusCommand
+        {
+            Id = createResult.Id!,
+            Status = QuizStatus.Live
+        };
+        // Act
+        var response = await _client.PutAsJsonAsync("/quiz/some-id", command);
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_WithValidArguments_ReturnsOk()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = $"{IdGenerator.GenerateId(8)} Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true,
+            StartDate = DateTime.UtcNow.AddDays(1),
+        };
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        // Close the quiz
+        var command = new UpdateQuizStatusCommand
+        {
+            Id = createResult.Id!,
+            Status = QuizStatus.Live
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/quiz/{createResult.Id}/status", command);
+
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(QuizStatus.Live, result.Status);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_ClosedQuiz_ReturnsBadRequest()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = $"{IdGenerator.GenerateId(8)} Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true,
+            StartDate = DateTime.UtcNow.AddDays(1),
+        };
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        // Close the quiz
+        var command = new UpdateQuizStatusCommand
+        {
+            Id = createResult.Id!,
+            Status = QuizStatus.Closed
+        };
+        var response = await _client.PutAsJsonAsync($"/quiz/{createResult.Id}/status", command);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // Act
+        command.Status = QuizStatus.Live;
+        response = await _client.PutAsJsonAsync($"/quiz/{createResult.Id}/status", command);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<Result>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal("Quiz is already closed.", result.Message);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_5MinutesFromeTime_ReturnsBadRequest()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        // Create a quiz first
+        var createCommand = new CreateQuizCommand
+        {
+            Title = $"{IdGenerator.GenerateId(8)} Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true,
+            StartDate = DateTime.UtcNow.AddMinutes(5),
+        };
+        var createResponse = await _client.PostAsJsonAsync("/quiz", createCommand);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(createResult);
+
+        // Act
+        var command = new UpdateQuizStatusCommand
+        {
+            Id = createResult.Id!,
+            Status = QuizStatus.Closed
+        };
+        var response = await _client.PutAsJsonAsync($"/quiz/{createResult.Id}/status", command);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<Result>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal("Quiz cannot be updated because start time is less than 5 minutes from now.", result.Message);
     }
 }

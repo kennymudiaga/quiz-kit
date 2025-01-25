@@ -16,6 +16,7 @@ public class QuizConfig : IEntityTypeConfiguration<Quiz>
         builder.Property(x => x.CategoryId).HasMaxLength(36);
         builder.Property(x => x.OrganizationId).HasMaxLength(36);
         builder.Property(x => x.ImageUrl).HasMaxLength(250);
+        builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(36);
 
         builder.HasOne(x => x.Category)
             .WithMany()

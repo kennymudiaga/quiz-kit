@@ -1,3 +1,4 @@
+using QuizKit.Common.Enums;
 using QuizKit.Common.Requests.Quizzes;
 
 namespace QuizKit.Core.Entities;
@@ -6,6 +7,7 @@ public record Quiz : IdEntity
 {
     public const string QuestionsNavigationName = nameof(_questions);
 
+    // DO NOT Remove: For EF and Test classes
     protected Quiz()
     {
     }
@@ -21,6 +23,7 @@ public record Quiz : IdEntity
         ShowAnswers = command.ShowAnswers;
         CreatedAt = DateTime.UtcNow;
         CategoryId = command.CategoryId;
+        StartDate = command.StartDate;
     }
 
     public string? Title { get; protected set; }
@@ -34,6 +37,7 @@ public record Quiz : IdEntity
     public int? TimeLimit { get; protected set; }
     public bool RandomizeQuestions { get; protected set; }
     public bool ShowAnswers { get; protected set; }
+    public QuizStatus Status { get; set; } = QuizStatus.Created;
 
     protected readonly List<QuizQuestion> _questions = [];
 

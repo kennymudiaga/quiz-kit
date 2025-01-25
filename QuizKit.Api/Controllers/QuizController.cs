@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuizKit.Api.Extensions;
 using QuizKit.Common.Constants;
+using QuizKit.Common.Enums;
 using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
@@ -31,7 +32,7 @@ public class QuizController : ControllerBase
     [HttpPost]
     [Authorize(Policies.Admin)]
     [SwaggerOperation(Summary = "Create a new quiz", Description = "Creates a new quiz with the specified details")]
-    [SwaggerResponse(StatusCodes.Status200OK, "Quiz created successfully", typeof(Result<QuizModel>))]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz created successfully", typeof(QuizModel))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid quiz details provided", typeof(Result))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized to create quizzes")]
@@ -43,12 +44,13 @@ public class QuizController : ControllerBase
 
     [HttpGet]
     [SwaggerOperation(Summary = "Get quizzes", Description = "Retrieves a paginated list of quizzes with optional filtering")]
-    [SwaggerResponse(StatusCodes.Status200OK, "Quizzes retrieved successfully", typeof(Result<PagedList<QuizModel>>))]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quizzes retrieved successfully", typeof(PagedList<QuizModel>))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid parameters provided", typeof(Result))]
     public async Task<IActionResult> GetQuizzes(
         [FromQuery] string? organizationId = null,
         [FromQuery] string? categoryId = null,
         [FromQuery] string? searchTerm = null,
+        [FromQuery] QuizStatus? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
@@ -58,6 +60,7 @@ public class QuizController : ControllerBase
             OrganizationId = organizationId,
             CategoryId = categoryId,
             SearchTerm = searchTerm,
+            Status = status,
             Page = page,
             PageSize = pageSize
         };
@@ -80,12 +83,31 @@ public class QuizController : ControllerBase
     [HttpPut("{id}")]
     [Authorize(Policies.Admin)]
     [SwaggerOperation(Summary = "Update an existing quiz", Description = "Updates an existing quiz with the specified details")]
-    [SwaggerResponse(StatusCodes.Status200OK, "Quiz updated successfully", typeof(Result<QuizModel>))]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz updated successfully", typeof(QuizModel))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid quiz details provided", typeof(Result))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
     public async Task<IActionResult> Update(string id, UpdateQuizCommand command, CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+        {
+            return Result.BadRequest("ID in URL must match ID in request body.").ToActionResult();
+        }
+
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult();
+    }
+
+    [HttpPut("{id}/status")]
+    [Authorize(Policies.Admin)]
+    [SwaggerOperation(Summary = "Update an existing quiz", Description = "Updates an existing quiz with the specified details")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Quiz status updated successfully", typeof(QuizModel))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid quiz ststus provided", typeof(Result))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "User is not authorized")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
+    public async Task<IActionResult> UpdateStatus(string id, UpdateQuizStatusCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id)
         {

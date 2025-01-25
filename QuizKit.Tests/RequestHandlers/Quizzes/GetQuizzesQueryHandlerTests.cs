@@ -1,15 +1,17 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using QuizKit.Common.Enums;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
 using QuizKit.Core.Data;
 using QuizKit.Core.Entities;
+using QuizKit.Core.Mappers;
 using QuizKit.Core.RequestHandlers.Quizzes;
 using QuizKit.Tests.TestHelpers;
 
 namespace QuizKit.Tests.RequestHandlers.Quizzes;
 
-public class GetQuizzesQueryHandlerTests
+public class GetQuizzesQueryHandlerTests : IDisposable
 {
     private readonly QuizDbContext _context;
     private readonly IMapper _mapper;
@@ -18,11 +20,12 @@ public class GetQuizzesQueryHandlerTests
     public GetQuizzesQueryHandlerTests()
     {
         var options = new DbContextOptionsBuilder<QuizDbContext>()
-            .UseInMemoryDatabase(databaseName: $"QuizDb_{Guid.NewGuid()}")
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
         _context = new QuizDbContext(options);
-        _mapper = CreateMapper();
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<QuizMappingProfile>());
+        _mapper = config.CreateMapper();
         _handler = new GetQuizzesQueryHandler(_context, _mapper);
 
         SeedDatabase();
@@ -90,6 +93,59 @@ public class GetQuizzesQueryHandlerTests
         Assert.All(result.Data!.Items, quiz => Assert.Equal(categoryId, quiz.CategoryId));
     }
 
+    [Fact]
+    public async Task Handle_WithStatusFilter_ReturnsMatchingQuizzes()
+    {
+        // Arrange
+        var quizzes = new[]
+        {
+            new Quiz(new CreateQuizCommand { Title = "Quiz 1" }) { Status = QuizStatus.Created },
+            new Quiz(new CreateQuizCommand { Title = "Quiz 2" }) { Status = QuizStatus.Live },
+            new Quiz(new CreateQuizCommand { Title = "Quiz 3" }) { Status = QuizStatus.Live }
+        };
+        _context.Quizzes.AddRange(quizzes);
+        await _context.SaveChangesAsync();
+
+        var query = new GetQuizzesQuery { Status = QuizStatus.Live };
+
+        // Act
+        var result = await _handler.Handle(query, default);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data!.TotalCount);
+        Assert.All(result.Data.Items, q => Assert.Equal(QuizStatus.Live, q.Status));
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchTermAndStatus_ReturnsMatchingQuizzes()
+    {
+        // Arrange
+        var quizzes = new[]
+        {
+            new Quiz(new CreateQuizCommand { Title = "Math Quiz", Description = "Basic math" }) { Status = QuizStatus.Live },
+            new Quiz(new CreateQuizCommand { Title = "Science Quiz", Description = "Basic science" }) { Status = QuizStatus.Live },
+            new Quiz(new CreateQuizCommand { Title = "History Quiz", Description = "Contains math" }) { Status = QuizStatus.Created }
+        };
+        _context.Quizzes.AddRange(quizzes);
+        await _context.SaveChangesAsync();
+
+        var query = new GetQuizzesQuery 
+        { 
+            SearchTerm = "math",
+            Status = QuizStatus.Live
+        };
+
+        // Act
+        var result = await _handler.Handle(query, default);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Data!.TotalCount);
+        Assert.Equal("Math Quiz", result.Data.Items[0].Title);
+        Assert.Equal(QuizStatus.Live, result.Data.Items[0].Status);
+    }
+
     private void SeedDatabase()
     {
         var organizations = new List<Organization>
@@ -119,15 +175,9 @@ public class GetQuizzesQueryHandlerTests
         _context.SaveChanges();
     }
 
-    private static IMapper CreateMapper()
+    public void Dispose()
     {
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<Quiz, QuizModel>();
-            cfg.CreateMap<Category, CategoryModel>();
-            cfg.CreateMap<Organization, OrganizationModel>();
-        });
-
-        return configuration.CreateMapper();
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
     }
 }

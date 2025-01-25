@@ -40,4 +40,6 @@ public class CreateQuizCommand : IRequest<Result<QuizModel>>
     /// The category ID that this quiz belongs to
     /// </summary>
     public string? CategoryId { get; set; }
+
+    public DateTime StartDate { get; set; }
 }

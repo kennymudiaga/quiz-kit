@@ -1,3 +1,5 @@
+using QuizKit.Common.Enums;
+
 namespace QuizKit.Common.Models.Quizzes;
 
 public record QuizModel
@@ -14,5 +16,6 @@ public record QuizModel
     public int? TimeLimit { get; init; }
     public bool RandomizeQuestions { get; init; }
     public bool ShowAnswers { get; init; }
+    public QuizStatus Status { get; init; }
     public List<QuestionModel>? Questions { get; init; }
 }

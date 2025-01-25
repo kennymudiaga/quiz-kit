@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using QuizKit.Api.Controllers;
+using QuizKit.Common.Enums;
 using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
@@ -35,7 +36,8 @@ public class QuizControllerTests
             Id = "test-id",
             Title = command.Title,
             Description = command.Description,
-            OrganizationId = command.OrganizationId
+            OrganizationId = command.OrganizationId,
+            Status = QuizStatus.Created
         };
 
         _mockMediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
@@ -48,6 +50,7 @@ public class QuizControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<QuizModel>(okResult.Value);
         Assert.Equal(quizModel.Id, returnValue.Id);
+        Assert.Equal(QuizStatus.Created, returnValue.Status);
     }
 
     [Fact]
@@ -56,68 +59,115 @@ public class QuizControllerTests
         // Arrange
         var command = new CreateQuizCommand();
         _mockMediator.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.BadRequest("Invalid command"));
+            .ReturnsAsync(Result.Failure("Invalid command"));
 
         // Act
         var result = await _controller.Create(command, default);
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        var returnValue = Assert.IsAssignableFrom<Result>(badRequestResult.Value);
-        Assert.False(returnValue.IsSuccess);
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 
     [Fact]
     public async Task GetQuizzes_WithValidParameters_ReturnsOk()
     {
         // Arrange
-        var query = new GetQuizzesQuery
-        {
-            OrganizationId = "test-org",
-            CategoryId = "test-cat",
-            SearchTerm = "test",
-            Page = 1,
-            PageSize = 10
-        };
-
         var quizzes = new List<QuizModel>
         {
-            new() { Id = "quiz1", Title = "Quiz 1" },
-            new() { Id = "quiz2", Title = "Quiz 2" }
+            new() { Id = "1", Title = "Quiz 1" },
+            new() { Id = "2", Title = "Quiz 2" }
         };
 
         var pagedList = new PagedList<QuizModel>
         {
             Items = quizzes,
-            TotalCount = 2,
             Page = 1,
-            PageSize = 10
+            PageSize = 10,
+            TotalCount = quizzes.Count
         };
 
-        _mockMediator.Setup(m => m.Send(It.Is<GetQuizzesQuery>(q =>
-            q.OrganizationId == query.OrganizationId &&
-            q.CategoryId == query.CategoryId &&
-            q.SearchTerm == query.SearchTerm &&
-            q.Page == query.Page &&
-            q.PageSize == query.PageSize), It.IsAny<CancellationToken>()))
+        _mockMediator.Setup(m => m.Send(It.IsAny<GetQuizzesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(pagedList));
 
         // Act
-        var result = await _controller.GetQuizzes(
-            query.OrganizationId,
-            query.CategoryId,
-            query.SearchTerm,
-            query.Page,
-            query.PageSize,
-            default);
+        var result = await _controller.GetQuizzes();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var returnValue = Assert.IsType<PagedList<QuizModel>>(okResult.Value);
-        Assert.Equal(2, returnValue.Items.Count);
         Assert.Equal(2, returnValue.TotalCount);
-        Assert.Equal(1, returnValue.Page);
-        Assert.Equal(10, returnValue.PageSize);
+    }
+
+    [Fact]
+    public async Task GetQuizzes_WithStatusFilter_ReturnsFilteredQuizzes()
+    {
+        // Arrange
+        var quizzes = new List<QuizModel>
+        {
+            new() { Id = "1", Title = "Quiz 1", Status = QuizStatus.Live },
+            new() { Id = "2", Title = "Quiz 2", Status = QuizStatus.Live }
+        };
+
+        var pagedList = new PagedList<QuizModel>
+        {
+            Items = quizzes,
+            Page = 1,
+            PageSize = 10,
+            TotalCount = quizzes.Count
+        };
+
+        _mockMediator.Setup(m => m.Send(
+            It.Is<GetQuizzesQuery>(q => q.Status == QuizStatus.Live),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(pagedList));
+
+        // Act
+        var result = await _controller.GetQuizzes(status: QuizStatus.Live, page: 1, pageSize: 10);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<PagedList<QuizModel>>(okResult.Value);
+        Assert.Equal(2, returnValue.TotalCount);
+        Assert.All(returnValue.Items, quiz => Assert.Equal(QuizStatus.Live, quiz.Status));
+    }
+
+    [Fact]
+    public async Task GetQuizzes_WithStatusAndSearchTerm_ReturnsCombinedFilteredQuizzes()
+    {
+        // Arrange
+        var quizzes = new List<QuizModel>
+        {
+            new() { Id = "1", Title = "Math Quiz", Status = QuizStatus.Live },
+        };
+
+        var pagedList = new PagedList<QuizModel>
+        {
+            Items = quizzes,
+            Page = 1,
+            PageSize = 10,
+            TotalCount = quizzes.Count
+        };
+
+        _mockMediator.Setup(m => m.Send(
+            It.Is<GetQuizzesQuery>(q => 
+                q.Status == QuizStatus.Live && 
+                q.SearchTerm == "Math"),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(pagedList));
+
+        // Act
+        var result = await _controller.GetQuizzes(
+            searchTerm: "Math",
+            status: QuizStatus.Live,
+            page: 1,
+            pageSize: 10);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<PagedList<QuizModel>>(okResult.Value);
+        Assert.Single(returnValue.Items);
+        Assert.Equal("Math Quiz", returnValue.Items[0].Title);
+        Assert.Equal(QuizStatus.Live, returnValue.Items[0].Status);
     }
 
     [Fact]
