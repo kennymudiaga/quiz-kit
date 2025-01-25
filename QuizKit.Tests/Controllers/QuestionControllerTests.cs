@@ -24,7 +24,7 @@ public class QuestionControllerTests
         var quizId = "test-quiz";
         var command = new CreateQuestionCommand
         {
-            QuizId = "will-be-overwritten",
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -45,13 +45,12 @@ public class QuestionControllerTests
             Answer = command.Answer
         };
 
-        _mediator.Setup(m => m.Send(
-            It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
+        _mediator.Setup(m => m.Send(It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(expectedModel));
 
         // Act
-        var result = await _controller.Create(quizId, command);
+        var result = await _controller.Create(quizId, command, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -61,8 +60,7 @@ public class QuestionControllerTests
         Assert.Equal(expectedModel.QuestionText, model.QuestionText);
         Assert.Equal(expectedModel.Answer, model.Answer);
 
-        _mediator.Verify(m => m.Send(
-            It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
+        _mediator.Verify(m => m.Send(It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -74,7 +72,7 @@ public class QuestionControllerTests
         var quizId = "test-quiz";
         var command = new CreateQuestionCommand
         {
-            QuizId = "will-be-overwritten",
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -83,13 +81,12 @@ public class QuestionControllerTests
             Answer = "A"
         };
 
-        _mediator.Setup(m => m.Send(
-            It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
+        _mediator.Setup(m => m.Send(It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.BadRequest("Invalid command"));
 
         // Act
-        var result = await _controller.Create(quizId, command);
+        var result = await _controller.Create(quizId, command, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -104,7 +101,7 @@ public class QuestionControllerTests
         var quizId = "non-existent-quiz";
         var command = new CreateQuestionCommand
         {
-            QuizId = "will-be-overwritten",
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -113,13 +110,12 @@ public class QuestionControllerTests
             Answer = "A"
         };
 
-        _mediator.Setup(m => m.Send(
-            It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
+        _mediator.Setup(m => m.Send(It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.Create(quizId, command);
+        var result = await _controller.Create(quizId, command, default);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundResult>(result);
@@ -132,7 +128,7 @@ public class QuestionControllerTests
         var quizId = "";
         var command = new CreateQuestionCommand
         {
-            QuizId = "will-be-overwritten",
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -141,13 +137,12 @@ public class QuestionControllerTests
             Answer = "A"
         };
 
-        _mediator.Setup(m => m.Send(
-            It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
+        _mediator.Setup(m => m.Send(It.Is<CreateQuestionCommand>(c => c.QuizId == quizId),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.Create(quizId, command);
+        var result = await _controller.Create(quizId, command, default);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundResult>(result);
@@ -161,8 +156,8 @@ public class QuestionControllerTests
         var questionId = "test-question";
         var command = new UpdateQuestionCommand
         {
-            Id = "will-be-overwritten",
-            QuizId = "will-be-overwritten",
+            Id = questionId,
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -196,7 +191,7 @@ public class QuestionControllerTests
         .ReturnsAsync(Result.Success(expectedModel));
 
         // Act
-        var result = await _controller.Update(quizId, questionId, command);
+        var result = await _controller.Update(quizId, questionId, command, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -219,8 +214,8 @@ public class QuestionControllerTests
         var questionId = "test-question";
         var command = new UpdateQuestionCommand
         {
-            Id = "will-be-overwritten",
-            QuizId = "will-be-overwritten",
+            Id = questionId,
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -229,11 +224,12 @@ public class QuestionControllerTests
             Answer = "A"
         };
 
-        _mediator.Setup(m => m.Send(It.IsAny<UpdateQuestionCommand>(), It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.IsAny<UpdateQuestionCommand>(),
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.BadRequest("Invalid command"));
 
         // Act
-        var result = await _controller.Update(quizId, questionId, command);
+        var result = await _controller.Update(quizId, questionId, command, default);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -249,8 +245,8 @@ public class QuestionControllerTests
         var questionId = "non-existent";
         var command = new UpdateQuestionCommand
         {
-            Id = "will-be-overwritten",
-            QuizId = "will-be-overwritten",
+            Id = questionId,
+            QuizId = quizId,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -259,11 +255,12 @@ public class QuestionControllerTests
             Answer = "A"
         };
 
-        _mediator.Setup(m => m.Send(It.IsAny<UpdateQuestionCommand>(), It.IsAny<CancellationToken>()))
+        _mediator.Setup(m => m.Send(It.IsAny<UpdateQuestionCommand>(),
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.Update(quizId, questionId, command);
+        var result = await _controller.Update(quizId, questionId, command, default);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -306,7 +303,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.Success(expectedQuestions));
 
         // Act
-        var result = await _controller.GetQuestions(quizId);
+        var result = await _controller.GetQuestions(quizId, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -328,7 +325,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.GetQuestions(quizId);
+        var result = await _controller.GetQuestions(quizId, default);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -358,7 +355,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.Success(expectedQuestion));
 
         // Act
-        var result = await _controller.Get(quizId, questionId);
+        var result = await _controller.Get(quizId, questionId, default);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -386,7 +383,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.Get(quizId, questionId);
+        var result = await _controller.Get(quizId, questionId, default);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -405,7 +402,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.Success());
 
         // Act
-        var result = await _controller.Delete(quizId, questionId);
+        var result = await _controller.Delete(quizId, questionId, default);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -424,7 +421,7 @@ public class QuestionControllerTests
             .ReturnsAsync(Result.NotFound());
 
         // Act
-        var result = await _controller.Delete(quizId, questionId);
+        var result = await _controller.Delete(quizId, questionId, default);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
