@@ -307,4 +307,68 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_WithValidIds_ReturnsSuccess()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Create a quiz first
+        var createQuizCommand = new CreateQuizCommand
+        {
+            Title = "Test Quiz",
+            Description = "Test Description",
+            TimeLimit = 30,
+            RandomizeQuestions = true,
+            ShowAnswers = true
+        };
+
+        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
+        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
+        Assert.NotNull(quiz);
+
+        // Create a question
+        var createQuestionCommand = new CreateQuestionCommand
+        {
+            QuizId = quiz.Id!,
+            QuestionText = "Test Question",
+            A = "Option A",
+            B = "Option B",
+            C = "Option C",
+            D = "Option D",
+            Answer = "A"
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", createQuestionCommand);
+        var question = await createResponse.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
+        Assert.NotNull(question);
+
+        // Act
+        var response = await _client.GetAsync($"/quiz/{quiz.Id}/question/{question.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(createQuestionCommand.QuestionText, result.QuestionText);
+        Assert.Equal(createQuestionCommand.A, result.A);
+        Assert.Equal(createQuestionCommand.B, result.B);
+        Assert.Equal(createQuestionCommand.C, result.C);
+        Assert.Equal(createQuestionCommand.D, result.D);
+        Assert.Equal(createQuestionCommand.Answer, result.Answer);
+    }
+
+    [Fact]
+    public async Task Get_WithNonExistentQuestion_ReturnsNotFound()
+    {
+        // Arrange
+        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+
+        // Act
+        var response = await _client.GetAsync("/quiz/non-existent-quiz/question/non-existent-id");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

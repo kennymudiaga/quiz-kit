@@ -29,13 +29,14 @@ public class QuestionController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [SwaggerOperation(Summary = "Get a specific question", Description = "Retrieves a specific question by its ID")]
+    [SwaggerOperation(Summary = "Get a question", Description = "Returns a specific question by ID")]
     [SwaggerResponse(StatusCodes.Status200OK, "Question retrieved successfully", typeof(QuestionModel))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Question not found", typeof(Result))]
     public async Task<IActionResult> Get(string quizId, string id)
     {
-        // TODO: Implement GetQuestionQuery and handler
-        return NotFound(Result.NotFound());
+        var query = new GetQuestionQuery { QuizId = quizId, Id = id };
+        var result = await _mediator.Send(query);
+        return result.ToActionResult();
     }
 
     [HttpPost]
