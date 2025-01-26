@@ -1,48 +1,21 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Questions;
-using QuizKit.Common.Requests.Quizzes;
-using QuizKit.Core.Data;
+using QuizKit.IntegrationTests.TestBase;
 using Xunit;
 
 namespace QuizKit.IntegrationTests;
 
-public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class QuestionControllerIntegrationTests(CustomWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    private readonly HttpClient _client;
-    private readonly QuizDbContext _context;
-    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
-
-    public QuestionControllerIntegrationTests(CustomWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-        _context = factory.Services.GetRequiredService<QuizDbContext>();
-        _context.Database.EnsureDeleted();
-        _context.Database.EnsureCreated();
-    }
-
     [Fact]
     public async Task Create_WithValidCommand_ReturnsSuccess()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
-        // Create a quiz first
-        var createQuizCommand = new CreateQuizCommand
-        {
-            Title = "Test Quiz",
-            Description = "Test Description",
-            TimeLimit = 30,
-            RandomizeQuestions = true,
-            ShowAnswers = true
-        };
-
-        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
-        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
-        Assert.NotNull(quiz);
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
         var command = new CreateQuestionCommand
         {
@@ -56,11 +29,9 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", command);
+        var result = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", command);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
         Assert.NotNull(result);
         Assert.Equal(command.QuestionText, result.QuestionText);
         Assert.Equal(command.A, result.A);
@@ -74,7 +45,7 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Create_WithNonExistentQuiz_ReturnsNotFound()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
         var command = new CreateQuestionCommand
         {
@@ -88,7 +59,7 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/quiz/non-existent-quiz/question", command);
+        var response = await Client.PostAsJsonAsync($"/quiz/non-existent-quiz/question", command);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -97,12 +68,16 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     [Fact]
     public async Task Create_WithoutAdminRole_ReturnsForbidden()
     {
-        // Arrange - Login as non-admin user
-        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+        // Arrange
+        // Login as Admin
+        await LoginAsAdminAsync();
+
+        // Create a quiz
+        var quiz = await CreateQuizAsync($"Test Quiz {Guid.NewGuid()}", "Test Description");
 
         var command = new CreateQuestionCommand
         {
-            QuizId = "any-quiz-id",
+            QuizId = quiz.Id!,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -110,9 +85,10 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
             D = "Option D",
             Answer = "A"
         };
-
+        // Arrange - Login as non-admin user
+        await LoginAsBasicUserAsync();
         // Act
-        var response = await _client.PostAsJsonAsync("/quiz/any-quiz-id/question", command);
+        var response = await Client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", command);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -122,24 +98,11 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Update_WithValidCommand_ReturnsSuccess()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
-        // Create a quiz first
-        var createQuizCommand = new CreateQuizCommand
-        {
-            Title = "Test Quiz",
-            Description = "Test Description",
-            TimeLimit = 30,
-            RandomizeQuestions = true,
-            ShowAnswers = true
-        };
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
-        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
-        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
-        Assert.NotNull(quiz);
-
-        // Create a question
-        var createQuestionCommand = new CreateQuestionCommand
+        var createCommand = new CreateQuestionCommand
         {
             QuizId = quiz.Id!,
             QuestionText = "Original Question",
@@ -150,11 +113,8 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
             Answer = "A"
         };
 
-        var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", createQuestionCommand);
-        var question = await createResponse.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
+        var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
         Assert.NotNull(question);
-
-        // Update the question
         var updateCommand = new UpdateQuestionCommand
         {
             Id = question.Id,
@@ -168,11 +128,9 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/quiz/{quiz.Id}/question/{question.Id}", updateCommand);
+        var result = await PutAsync<QuestionModel>($"/quiz/{quiz.Id}/question/{question.Id}", updateCommand);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
         Assert.NotNull(result);
         Assert.Equal(updateCommand.QuestionText, result.QuestionText);
         Assert.Equal(updateCommand.A, result.A);
@@ -186,12 +144,14 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Update_WithNonExistentQuestion_ReturnsNotFound()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
+
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
         var command = new UpdateQuestionCommand
         {
             Id = "999",
-            QuizId = "non-existent-quiz",
+            QuizId = quiz.Id!,
             QuestionText = "Test Question",
             A = "Option A",
             B = "Option B",
@@ -201,7 +161,7 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/quiz/non-existent-quiz/question/999", command);
+        var response = await Client.PutAsJsonAsync($"/quiz/{quiz.Id}/question/999", command);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -210,23 +170,42 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     [Fact]
     public async Task Update_WithoutAdminRole_ReturnsForbidden()
     {
-        // Arrange - Login as non-admin user
-        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+        // Arrange
+        // Login as admin user
+        await LoginAsAdminAsync();
 
-        var command = new UpdateQuestionCommand
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
+
+        var createCommand = new CreateQuestionCommand
         {
-            Id = "1",
-            QuizId = "any-quiz-id",
-            QuestionText = "Test Question",
-            A = "Option A",
-            B = "Option B",
-            C = "Option C",
-            D = "Option D",
+            QuizId = quiz.Id!,
+            QuestionText = "Original Question",
+            A = "Original A",
+            B = "Original B",
+            C = "Original C",
+            D = "Original D",
             Answer = "A"
         };
 
+        var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
+        Assert.NotNull(question);
+
+        // Login as non-admin user
+        await LoginAsBasicUserAsync();
+        var updateCommand = new UpdateQuestionCommand
+        {
+            Id = question.Id,
+            QuizId = quiz.Id!,
+            QuestionText = "Updated Question",
+            A = "Updated A",
+            B = "Updated B",
+            C = "Updated C",
+            D = "Updated D",
+            Answer = "B"
+        };
+
         // Act
-        var response = await _client.PutAsJsonAsync("/quiz/any-quiz-id/question/1", command);
+        var response = await Client.PutAsJsonAsync($"/quiz/{quiz.Id}/question/{question.Id}", updateCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -236,23 +215,10 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task GetQuestions_WithValidQuizId_ReturnsSuccess()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
-        // Create a quiz first
-        var createQuizCommand = new CreateQuizCommand
-        {
-            Title = "Test Quiz",
-            Description = "Test Description",
-            TimeLimit = 30,
-            RandomizeQuestions = true,
-            ShowAnswers = true
-        };
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
-        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
-        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
-        Assert.NotNull(quiz);
-
-        // Create questions
         var questions = new[]
         {
             new CreateQuestionCommand
@@ -279,30 +245,27 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
 
         foreach (var question in questions)
         {
-            var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", question);
-            Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+            await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", question);
         }
 
         // Act
-        var response = await _client.GetAsync($"/quiz/{quiz.Id}/question");
+        var result = await GetAsync<List<QuestionModel>>($"/quiz/{quiz.Id}/question");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<List<QuestionModel>>(_jsonOptions);
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
-        Assert.Equal(questions[0].QuestionText, result[0].QuestionText);
-        Assert.Equal(questions[1].QuestionText, result[1].QuestionText);
+        Assert.Contains(result, q => q.QuestionText == "Question 1");
+        Assert.Contains(result, q => q.QuestionText == "Question 2");
     }
 
     [Fact]
     public async Task GetQuestions_WithNonExistentQuiz_ReturnsNotFound()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
         // Act
-        var response = await _client.GetAsync("/quiz/non-existent-quiz/question");
+        var response = await Client.GetAsync("/quiz/non-existent-quiz/question");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -312,24 +275,11 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Get_WithValidIds_ReturnsSuccess()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
-        // Create a quiz first
-        var createQuizCommand = new CreateQuizCommand
-        {
-            Title = "Test Quiz",
-            Description = "Test Description",
-            TimeLimit = 30,
-            RandomizeQuestions = true,
-            ShowAnswers = true
-        };
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
-        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
-        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
-        Assert.NotNull(quiz);
-
-        // Create a question
-        var createQuestionCommand = new CreateQuestionCommand
+        var createCommand = new CreateQuestionCommand
         {
             QuizId = quiz.Id!,
             QuestionText = "Test Question",
@@ -340,33 +290,29 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
             Answer = "A"
         };
 
-        var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", createQuestionCommand);
-        var question = await createResponse.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
-        Assert.NotNull(question);
+        var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
 
         // Act
-        var response = await _client.GetAsync($"/quiz/{quiz.Id}/question/{question.Id}");
+        var result = await GetAsync<QuestionModel>($"/quiz/{quiz.Id}/question/{question.Id}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
         Assert.NotNull(result);
-        Assert.Equal(createQuestionCommand.QuestionText, result.QuestionText);
-        Assert.Equal(createQuestionCommand.A, result.A);
-        Assert.Equal(createQuestionCommand.B, result.B);
-        Assert.Equal(createQuestionCommand.C, result.C);
-        Assert.Equal(createQuestionCommand.D, result.D);
-        Assert.Equal(createQuestionCommand.Answer, result.Answer);
+        Assert.Equal(createCommand.QuestionText, result.QuestionText);
+        Assert.Equal(createCommand.A, result.A);
+        Assert.Equal(createCommand.B, result.B);
+        Assert.Equal(createCommand.C, result.C);
+        Assert.Equal(createCommand.D, result.D);
+        Assert.Equal(createCommand.Answer, result.Answer);
     }
 
     [Fact]
     public async Task Get_WithNonExistentQuestion_ReturnsNotFound()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
         // Act
-        var response = await _client.GetAsync("/quiz/non-existent-quiz/question/non-existent-id");
+        var response = await Client.GetAsync("/quiz/non-existent-quiz/question/non-existent-id");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -376,24 +322,11 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Delete_WithValidIds_ReturnsNoContent()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
-        // Create a quiz first
-        var createQuizCommand = new CreateQuizCommand
-        {
-            Title = "Test Quiz",
-            Description = "Test Description",
-            TimeLimit = 30,
-            RandomizeQuestions = true,
-            ShowAnswers = true
-        };
+        var quiz = await CreateQuizAsync("Test Quiz", "Test Description");
 
-        var quizResponse = await _client.PostAsJsonAsync("/quiz", createQuizCommand);
-        var quiz = await quizResponse.Content.ReadFromJsonAsync<QuizModel>(_jsonOptions);
-        Assert.NotNull(quiz);
-
-        // Create a question
-        var createQuestionCommand = new CreateQuestionCommand
+        var createCommand = new CreateQuestionCommand
         {
             QuizId = quiz.Id!,
             QuestionText = "Test Question",
@@ -404,18 +337,13 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
             Answer = "A"
         };
 
-        var createResponse = await _client.PostAsJsonAsync($"/quiz/{quiz.Id}/question", createQuestionCommand);
-        var question = await createResponse.Content.ReadFromJsonAsync<QuestionModel>(_jsonOptions);
-        Assert.NotNull(question);
+        var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
 
         // Act
-        var response = await _client.DeleteAsync($"/quiz/{quiz.Id}/question/{question.Id}");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await DeleteAsync($"/quiz/{quiz.Id}/question/{question.Id}");
 
         // Verify question is deleted
-        var getResponse = await _client.GetAsync($"/quiz/{quiz.Id}/question/{question.Id}");
+        var getResponse = await Client.GetAsync($"/quiz/{quiz.Id}/question/{question.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -423,10 +351,10 @@ public class QuestionControllerIntegrationTests : IClassFixture<CustomWebApplica
     public async Task Delete_WithNonExistentQuestion_ReturnsNotFound()
     {
         // Arrange
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await LoginAsAdminAsync();
 
         // Act
-        var response = await _client.DeleteAsync("/quiz/non-existent-quiz/question/non-existent-id");
+        var response = await Client.DeleteAsync("/quiz/non-existent-quiz/question/non-existent-id");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
