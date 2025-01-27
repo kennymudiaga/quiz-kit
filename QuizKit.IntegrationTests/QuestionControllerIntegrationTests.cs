@@ -291,7 +291,7 @@ public class QuestionControllerIntegrationTests(CustomWebApplicationFactory fact
         };
 
         var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
-
+        Assert.NotNull(question);
         // Act
         var result = await GetAsync<QuestionModel>($"/quiz/{quiz.Id}/question/{question.Id}");
 
@@ -338,6 +338,7 @@ public class QuestionControllerIntegrationTests(CustomWebApplicationFactory fact
         };
 
         var question = await PostAsync<QuestionModel>($"/quiz/{quiz.Id}/question", createCommand);
+        Assert.NotNull(question);
 
         // Act
         await DeleteAsync($"/quiz/{quiz.Id}/question/{question.Id}");
