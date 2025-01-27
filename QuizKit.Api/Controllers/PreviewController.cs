@@ -59,4 +59,19 @@ public class PreviewController : ControllerBase
         var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Get a quiz preview by ID
+    /// </summary>
+    /// <param name="id">Quiz ID</param>
+    /// <returns>Quiz preview information</returns>
+    [HttpGet("{id}")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Successfully retrieved quiz preview", typeof(QuizPreviewModel))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Quiz not found", typeof(Result))]
+    public async Task<IActionResult> GetQuizPreview(string id, CancellationToken cancellationToken)
+    {
+        var query = new GetPreviewByIdQuery { QuizId = id };
+        var result = await _mediator.Send(query, cancellationToken);
+        return result.ToActionResult();
+    }
 }

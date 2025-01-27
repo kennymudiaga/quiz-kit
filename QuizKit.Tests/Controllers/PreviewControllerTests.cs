@@ -134,4 +134,66 @@ public class PreviewControllerTests
         var returnValue = Assert.IsAssignableFrom<Result>(badRequestResult.Value);
         Assert.Equal(errorMessage, returnValue.Message);
     }
+
+    [Fact]
+    public async Task GetQuizPreview_WithValidId_ReturnsOk()
+    {
+        // Arrange
+        var preview = new QuizPreviewModel
+        {
+            Id = "test-id",
+            Title = "Test Quiz",
+            Description = "Test Description",
+            Category = "test-category",
+            QuestionsCount = 5
+        };
+
+        _mockMediator.Setup(m => m.Send(
+            It.Is<GetPreviewByIdQuery>(q => q.QuizId == "test-id"),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(preview));
+
+        // Act
+        var result = await _controller.GetQuizPreview("test-id", CancellationToken.None);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnValue = Assert.IsType<QuizPreviewModel>(okResult.Value);
+        Assert.Equal(preview.Id, returnValue.Id);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithInvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        _mockMediator.Setup(m => m.Send(
+            It.IsAny<GetPreviewByIdQuery>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.NotFound());
+
+        // Act
+        var result = await _controller.GetQuizPreview("invalid-id", CancellationToken.None);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithUnavailableQuiz_ReturnsBadRequest()
+    {
+        // Arrange
+        var errorMessage = "Quiz not available";
+        _mockMediator.Setup(m => m.Send(
+            It.IsAny<GetPreviewByIdQuery>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.BadRequest(errorMessage));
+
+        // Act
+        var result = await _controller.GetQuizPreview("draft-quiz-id", CancellationToken.None);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var returnValue = Assert.IsAssignableFrom<Result>(badRequestResult.Value);
+        Assert.Equal(errorMessage, returnValue.Message);
+    }
 }
