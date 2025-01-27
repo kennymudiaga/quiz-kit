@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using QuizKit.Api.Extensions;
+using QuizKit.Common.Constants;
 using QuizKit.Common.Models;
 using QuizKit.Common.Models.Quizzes;
 using QuizKit.Common.Requests.Quizzes;
@@ -43,18 +44,19 @@ public class PreviewController : ControllerBase
         [FromQuery] string? categoryId,
         [FromQuery] string? searchTerm,
         [FromQuery] int? page,
-        [FromQuery] int? pageSize)
+        [FromQuery] int? pageSize,
+        CancellationToken cancellationToken)
     {
         var query = new GetPreviewsQuery
         {
             OrganizationId = organizationId,
             CategoryId = categoryId,
             SearchTerm = searchTerm,
-            Page = page ?? 1,
-            PageSize = pageSize ?? 10
+            Page = page.GetValueOrDefault(),
+            PageSize = pageSize.GetValueOrDefault(),
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }
 }
