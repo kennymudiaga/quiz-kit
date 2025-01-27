@@ -42,6 +42,7 @@ public class PreviewControllerIntegrationTests(CustomWebApplicationFactory facto
         Assert.True(result.Items.Count >= 2, "At least 2 quizzes expected.");
         Assert.Contains(result.Items, q => q.Title == "Quiz 1");
         Assert.Contains(result.Items, q => q.Title == "Quiz 2");
+        Assert.DoesNotContain(result.Items, q => q.Title == "Quiz 3");
     }
 
     [Fact]
@@ -105,5 +106,95 @@ public class PreviewControllerIntegrationTests(CustomWebApplicationFactory facto
         Assert.Equal(1, result.TotalCount);
         Assert.Single(result.Items);
         Assert.Equal("Quiz 1", result.Items[0].Title);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithApprovedQuiz_ReturnsPreview()
+    {
+        // Arrange
+        await LoginAsAdminAsync();
+
+        var quiz = await CreateQuizAsync(
+            title: "Test Quiz",
+            description: "Test Description",
+            categoryId: "cat-1");
+        await UpdateQuizStatusAsync(quiz.Id!, QuizStatus.Approved);
+
+        // Act
+        var result = await GetAsync<QuizPreviewModel>($"/preview/{quiz.Id}");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(quiz.Id, result.Id);
+        Assert.Equal("Test Quiz", result.Title);
+        Assert.Equal("Test Description", result.Description);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithLiveQuiz_ReturnsPreview()
+    {
+        // Arrange
+        await LoginAsAdminAsync();
+
+        var quiz = await CreateQuizAsync(
+            title: "Test Quiz",
+            description: "Test Description",
+            categoryId: "cat-1");
+        await UpdateQuizStatusAsync(quiz.Id!, QuizStatus.Live);
+
+        // Act
+        var result = await GetAsync<QuizPreviewModel>($"/preview/{quiz.Id}");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(quiz.Id, result.Id);
+        Assert.Equal("Test Quiz", result.Title);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithNonExistentId_ReturnsNotFound()
+    {
+        // Act
+        var response = await Client.GetAsync("/preview/non-existent-id");
+
+        // Assert
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithCreatedQuiz_ReturnsBadRequest()
+    {
+        // Arrange
+        await LoginAsAdminAsync();
+
+        var quiz = await CreateQuizAsync(
+            title: "Test Quiz",
+            description: "Test Description",
+            categoryId: "cat-1");
+
+        // Act
+        var response = await Client.GetAsync($"/preview/{quiz.Id}");
+
+        // Assert
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetQuizPreview_WithClosedQuiz_ReturnsBadRequest()
+    {
+        // Arrange
+        await LoginAsAdminAsync();
+
+        var quiz = await CreateQuizAsync(
+            title: "Test Quiz",
+            description: "Test Description",
+            categoryId: "cat-1");
+        await UpdateQuizStatusAsync(quiz.Id!, QuizStatus.Closed);
+
+        // Act
+        var response = await Client.GetAsync($"/preview/{quiz.Id}");
+
+        // Assert
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
