@@ -6,22 +6,14 @@ using QuizKit.Common.Models.Users;
 using QuizKit.Common.Requests.Users;
 using QuizKit.Common.Results;
 using Xunit;
-using QuizKit.Common;
+using QuizKit.IntegrationTests.TestBase;
 
 namespace QuizKit.IntegrationTests;
 
-public class UserControllerIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class UserControllerIntegrationTests : IntegrationTestBase
 {
-    private readonly HttpClient _client;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public UserControllerIntegrationTests(CustomWebApplicationFactory factory)
+    public UserControllerIntegrationTests(CustomWebApplicationFactory factory) : base(factory)
     {
-        _client = factory.CreateClient();
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
     }
 
     [Fact]
@@ -39,7 +31,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var response = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
 
         // Assert
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -50,7 +42,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var content = JsonSerializer.Deserialize<LoggedInUserModel>(responseContent, _jsonOptions);
+        var content = JsonSerializer.Deserialize<LoggedInUserModel>(responseContent, JsonOptions);
         Assert.NotNull(content);
 
         // Check data directly instead of relying on IsSuccess
@@ -79,13 +71,13 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var response = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        var content = JsonSerializer.Deserialize<Result>(responseContent, _jsonOptions);
+        var content = JsonSerializer.Deserialize<Result>(responseContent, JsonOptions);
         Assert.NotNull(content);
         Assert.False(content.IsSuccess);
         Assert.Contains("validation", content.Message?.ToLowerInvariant() ?? string.Empty);
@@ -105,11 +97,11 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             PhoneNumber = "+1234567890"
         };
 
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         var signUpResponseContent = await signUpResponse.Content.ReadAsStringAsync();
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             signUpResponseContent,
-            _jsonOptions
+            JsonOptions
         );
         Assert.True(signUpResponse.IsSuccessStatusCode,
             $"Signup failed. Full Response: {signUpResponseContent}, " +
@@ -122,7 +114,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = signUpCommand.Password
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
 
         // Assert
         var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
@@ -133,7 +125,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
-        var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(loginResponseContent, _jsonOptions);
+        var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(loginResponseContent, JsonOptions);
         Assert.NotNull(loginContent);
 
         // Check data directly instead of relying on IsSuccess
@@ -161,10 +153,10 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             PhoneNumber = "+1234567890"
         };
 
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         var signUpContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             await signUpResponse.Content.ReadAsStringAsync(),
-            _jsonOptions
+            JsonOptions
         );
         Assert.True(signUpResponse.IsSuccessStatusCode,
             $"Signup failed. Status: {signUpResponse.StatusCode}, " +
@@ -177,15 +169,15 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = signUpCommand.Password
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         loginResponse.EnsureSuccessStatusCode();
         var loginContent = JsonSerializer.Deserialize<LoggedInUserModel>(
             await loginResponse.Content.ReadAsStringAsync(),
-            _jsonOptions
+            JsonOptions
         );
 
         // Set the authorization token
-        _client.DefaultRequestHeaders.Authorization =
+        Client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginContent!.Token);
 
         var changePasswordCommand = new ChangePasswordCommand
@@ -194,7 +186,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             NewPassword = "NewStrongPassword456!"
         };
 
-        var changePasswordResponse = await _client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
+        var changePasswordResponse = await Client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
 
         // Assert
         var changePasswordResponseContent = await changePasswordResponse.Content.ReadAsStringAsync();
@@ -212,7 +204,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Password = changePasswordCommand.NewPassword
         };
 
-        var newLoginResponse = await _client.PostAsJsonAsync("/user/login", newLoginCommand);
+        var newLoginResponse = await Client.PostAsJsonAsync("/user/login", newLoginCommand);
         newLoginResponse.EnsureSuccessStatusCode();
     }
 
@@ -227,13 +219,13 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var response = await Client.PostAsJsonAsync("/user/login", loginCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var responseContent = await response.Content.ReadAsStringAsync();
-        var content = JsonSerializer.Deserialize<Result>(responseContent, _jsonOptions);
+        var content = JsonSerializer.Deserialize<Result>(responseContent, JsonOptions);
         Assert.NotNull(content);
         Assert.False(content.IsSuccess);
         Assert.Contains("invalid", content.Message?.ToLowerInvariant() ?? string.Empty);
@@ -250,7 +242,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
+        var response = await Client.PostAsJsonAsync("/user/change-password", changePasswordCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -270,7 +262,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         var requestPasswordResetCommand = new RequestPasswordResetCommand
@@ -279,7 +271,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
+        var response = await Client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -295,7 +287,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
+        var response = await Client.PostAsJsonAsync("/user/reset-password", requestPasswordResetCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -316,12 +308,12 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         // Then, request a password reset        
         var resetCommand = new RequestPasswordResetCommand { Email = email };
-        var resetResponse = await _client.PostAsJsonAsync("/user/reset-password", resetCommand);
+        var resetResponse = await Client.PostAsJsonAsync("/user/reset-password", resetCommand);
         resetResponse.EnsureSuccessStatusCode();
 
         var token = "12345678";
@@ -336,7 +328,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
+        var response = await Client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
         var text = await response.Content.ReadAsStringAsync();
         // Assert
         response.EnsureSuccessStatusCode();
@@ -348,7 +340,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = email,
             Password = newPassword
         };
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         loginResponse.EnsureSuccessStatusCode();
     }
 
@@ -367,12 +359,12 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Password",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         // Then, request a password reset        
         var resetCommand = new RequestPasswordResetCommand { Email = email };
-        var resetResponse = await _client.PostAsJsonAsync("/user/reset-password", resetCommand);
+        var resetResponse = await Client.PostAsJsonAsync("/user/reset-password", resetCommand);
         resetResponse.EnsureSuccessStatusCode();
 
         //  Wait 20 seconds for the token to expire
@@ -390,7 +382,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
+        var response = await Client.PostAsJsonAsync("/user/set-password", setPasswordCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -401,7 +393,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = email,
             Password = oldPassword,
         };
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
     }
 
@@ -412,7 +404,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         var email = $"available-{Guid.NewGuid()}@example.com";
 
         // Act
-        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+        var response = await Client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -432,11 +424,11 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "User",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         signUpResponse.EnsureSuccessStatusCode();
 
         // Act
-        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+        var response = await Client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -451,7 +443,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     public async Task CheckEmailAvailability_WithInvalidEmail_ReturnsBadRequest(string email)
     {
         // Act
-        var response = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+        var response = await Client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -485,21 +477,21 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
 
         foreach (var user in users)
         {
-            var response = await _client.PostAsJsonAsync("/user/signup", user);
+            var response = await Client.PostAsJsonAsync("/user/signup", user);
             var raw = await response.Content.ReadAsStringAsync();
             response.EnsureSuccessStatusCode();
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync("/user/search?page=1&pageSize=10");
+        var searchResponse = await Client.GetAsync("/user/search?page=1&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, JsonOptions);
         Assert.NotNull(result);
         Assert.True(result.TotalCount >= 2, "Expected at least 2 results");
         Assert.Equal(1, result.Page);
@@ -515,7 +507,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         var email = "searchtest-matches-users@example.com";
 
         // check if email is available - only sign up if it is
-        var emailAvailableResponse = await _client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
+        var emailAvailableResponse = await Client.GetAsync($"/user/check-email?email={Uri.EscapeDataString(email)}");
         if (emailAvailableResponse.IsSuccessStatusCode)
         {
             var signUpCommand = new SignUpCommand
@@ -527,20 +519,20 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
                 LastName = "doe",
                 PhoneNumber = "+1234567890"
             };
-            var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+            var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
             signUpResponse.EnsureSuccessStatusCode();
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}&page=1&pageSize=10");
+        var searchResponse = await Client.GetAsync($"/user/search?searchTerm={Uri.EscapeDataString(searchTerm)}&page=1&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, JsonOptions);
         Assert.NotNull(result);
         Assert.Equal(1, result.TotalCount);
         Assert.Single(result.Items);
@@ -564,20 +556,20 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
                 PhoneNumber = $"070312345{i}"
             };
 
-            var response = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+            var response = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
             response.EnsureSuccessStatusCode();
         }
 
         // login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         // Act
-        var searchResponse = await _client.GetAsync("/user/search?page=2&pageSize=10");
+        var searchResponse = await Client.GetAsync("/user/search?page=2&pageSize=10");
 
         // Assert
         searchResponse.EnsureSuccessStatusCode();
         var content = await searchResponse.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, _jsonOptions);
+        var result = JsonSerializer.Deserialize<PagedList<UserViewModel>>(content, JsonOptions);
         Assert.NotNull(result);
         Assert.True(result.TotalCount >= 25);
         Assert.Equal(10, result.Items.Count);
@@ -600,18 +592,18 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Test",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         Assert.True(signUpResponse.IsSuccessStatusCode, 
             $"Failed to create test user. Status: {signUpResponse.StatusCode}");
         // Get user id from response
         var signedUpUser = JsonSerializer.Deserialize<LoggedInUserModel>(
             await signUpResponse.Content.ReadAsStringAsync(),
-            _jsonOptions
+            JsonOptions
         );
         Assert.NotNull(signedUpUser);
 
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -621,7 +613,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+        var response = await Client.PostAsJsonAsync("/user/lock", lockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -632,7 +624,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = signUpCommand.Email,
             Password = signUpCommand.Password
         };
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.BadRequest, loginResponse.StatusCode);
     }
 
@@ -641,7 +633,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as regular user
-        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -651,7 +643,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+        var response = await Client.PostAsJsonAsync("/user/lock", lockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -662,7 +654,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -672,7 +664,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+        var response = await Client.PostAsJsonAsync("/user/lock", lockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -691,18 +683,18 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             LastName = "Test",
             PhoneNumber = "+1234567890"
         };
-        var signUpResponse = await _client.PostAsJsonAsync("/user/signup", signUpCommand);
+        var signUpResponse = await Client.PostAsJsonAsync("/user/signup", signUpCommand);
         Assert.True(signUpResponse.IsSuccessStatusCode, 
             $"Failed to create test user. Status: {signUpResponse.StatusCode}");
         
         var signedUpUser = JsonSerializer.Deserialize<LoggedInUserModel>(
             await signUpResponse.Content.ReadAsStringAsync(),
-            _jsonOptions
+            JsonOptions
         );
         Assert.NotNull(signedUpUser);
 
         // Login as admin and lock the user
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var lockCommand = new LockUserCommand
         {
@@ -710,7 +702,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Reason = "Integration test lock",
             LockoutExpiry = DateTime.UtcNow.AddDays(7)
         };
-        var lockResponse = await _client.PostAsJsonAsync("/user/lock", lockCommand);
+        var lockResponse = await Client.PostAsJsonAsync("/user/lock", lockCommand);
         Assert.Equal(HttpStatusCode.NoContent, lockResponse.StatusCode);
 
         // Verify user is locked
@@ -719,7 +711,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             Email = signUpCommand.Email,
             Password = signUpCommand.Password
         };
-        var loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        var loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.BadRequest, loginResponse.StatusCode);
 
         // Now unlock the user
@@ -728,11 +720,11 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
             UserId = signedUpUser.Id!,
             Reason = "Integration test unlock"
         };
-        var unlockResponse = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
+        var unlockResponse = await Client.PostAsJsonAsync("/user/unlock", unlockCommand);
         Assert.Equal(HttpStatusCode.NoContent, unlockResponse.StatusCode);
 
         // Verify user can log in again
-        loginResponse = await _client.PostAsJsonAsync("/user/login", loginCommand);
+        loginResponse = await Client.PostAsJsonAsync("/user/login", loginCommand);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
     }
 
@@ -741,7 +733,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as regular user
-        await _client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.BasicUserEmail, "StrongPassword123!");
 
         var unlockCommand = new UnlockUserCommand
         {
@@ -750,7 +742,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
+        var response = await Client.PostAsJsonAsync("/user/unlock", unlockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -761,7 +753,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
     {
         // Arrange
         // Login as admin
-        await _client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
+        await Client.LoginAsync(LoginTestUserBehavior.AdminUserEmail, "StrongPassword123!");
 
         var unlockCommand = new UnlockUserCommand
         {
@@ -770,7 +762,7 @@ public class UserControllerIntegrationTests : IClassFixture<CustomWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/unlock", unlockCommand);
+        var response = await Client.PostAsJsonAsync("/user/unlock", unlockCommand);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
